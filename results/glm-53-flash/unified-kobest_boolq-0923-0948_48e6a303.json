@@ -1,0 +1,20 @@
+{
+  "job_id": "48e6a303-b64f-4ffc-a71f-e7153f4c384d",
+  "name": "unified-kobest_boolq-0923-0948",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash",
+    "name": "glm-53-flash"
+  },
+  "experiment": "glm-53-flash-full-eval-0923-0948",
+  "benchmarks": [
+    {
+      "id": "kobest_boolq",
+      "provider_id": "e15177fe-9ed6-46d0-89c8-f6947ee0a101",
+      "metrics": {
+        "category_accuracy.unknown": 97.77,
+        "overall_accuracy": 97.77
+      },
+      "mlflow_run_id": "f57a1e9719884b4c8d7b2b202011723e"
+    }
+  ]
+}

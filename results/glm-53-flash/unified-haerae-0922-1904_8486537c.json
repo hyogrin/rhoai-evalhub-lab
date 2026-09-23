@@ -1,0 +1,32 @@
+{
+  "job_id": "8486537c-8818-439e-94a9-58e071c6d81c",
+  "name": "unified-haerae-0922-1904",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash",
+    "name": "glm-53-flash"
+  },
+  "experiment": "glm-53-flash-full-eval-0922-1904",
+  "benchmarks": [
+    {
+      "id": "haerae",
+      "provider_id": "9358101f-95cf-4c98-bdf2-b255e6c5b78d",
+      "metrics": {
+        "category_accuracy.correct_definition_matching": 18.91,
+        "category_accuracy.csat_geo": 16.89,
+        "category_accuracy.csat_law": 21.2,
+        "category_accuracy.csat_socio": 21.36,
+        "category_accuracy.date_understanding": 20.93,
+        "category_accuracy.general_knowledge": 17.05,
+        "category_accuracy.history": 23.53,
+        "category_accuracy.loan_words": 20.96,
+        "category_accuracy.lyrics_denoising": 0,
+        "category_accuracy.proverbs_denoising": 0,
+        "category_accuracy.rare_words": 18.02,
+        "category_accuracy.reading_comprehension": 20.94,
+        "category_accuracy.standard_nomenclature": 20.92,
+        "overall_accuracy": 14.85
+      },
+      "mlflow_run_id": "f2a2ff691dca42348f7b07185c69af61"
+    }
+  ]
+}

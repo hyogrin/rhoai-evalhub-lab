@@ -1,0 +1,21 @@
+{
+  "job_id": "8ea735db-5102-48f1-b7a3-9c1684414958",
+  "name": "kmmlu-eval",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash",
+    "name": "glm-53-flash"
+  },
+  "experiment": "korean-kmmlu-eval",
+  "benchmarks": [
+    {
+      "id": "kmmlu",
+      "provider_id": "e15177fe-9ed6-46d0-89c8-f6947ee0a101",
+      "metrics": {
+        "category_accuracy.Accounting": 80,
+        "overall_accuracy": 80,
+        "supercategory_accuracy.HUMSS": 80
+      },
+      "mlflow_run_id": "c1078db84acc4f709074e7251f4b641c"
+    }
+  ]
+}

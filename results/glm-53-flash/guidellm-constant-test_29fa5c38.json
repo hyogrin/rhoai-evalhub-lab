@@ -1,0 +1,23 @@
+{
+  "job_id": "29fa5c38-7a2d-41ad-82ef-3da560f5ae71",
+  "name": "guidellm-constant-test",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash/v1",
+    "name": "glm-53-flash"
+  },
+  "experiment": "guidellm-constant-final",
+  "benchmarks": [
+    {
+      "id": "constant",
+      "provider_id": "guidellm",
+      "metrics": {
+        "mean_itl_ms": 0,
+        "mean_ttft_ms": 0,
+        "output_tokens_per_second": 32.536962806537595,
+        "prompt_tokens_per_second": 74.83501445503646,
+        "requests_per_second": 1.0000000000000002
+      },
+      "mlflow_run_id": null
+    }
+  ]
+}

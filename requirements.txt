@@ -1,4 +1,4 @@
-# RHOAI LMEval Builder Lab — Notebook Dependencies
+# RHOAI EvalHub Lab — Notebook Dependencies
 # Install: pip install -q -r requirements.txt
 
 python-dotenv

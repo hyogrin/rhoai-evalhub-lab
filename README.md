@@ -1,6 +1,6 @@
-# RHOAI LMEval Builder Lab
+# RHOAI EvalHub Lab
 
-A hands-on workshop for running **Korean language evaluation benchmarks** on **Red Hat OpenShift AI** using the TrustyAI `LMEvalJob` Custom Resource. This lab guides you through evaluating open-weight LLMs on datasets like KMMLU, CLIcK, KoBEST, and HAE-RAE directly from your OpenShift AI environment.
+A hands-on workshop for running **Korean language evaluation benchmarks** on **Red Hat OpenShift AI 3.5** using the **EvalHub** service (GA in RHOAI 3.5). This lab guides you through evaluating LLMs — including external MaaS endpoints and cluster-deployed models — on datasets like KMMLU, CLIcK, KoBEST, and HAE-RAE with centralized **MLflow experiment tracking**.
 
 ## Architecture
 
@@ -10,28 +10,35 @@ flowchart LR
     EvalHub -->|tracking| MLflow[MLflow]
     EvalHub --> Operator[TrustyAI Operator]
     Operator --> GuideLLM[GuideLLM Pod]
-    Operator --> MCQ[Korean MCQ Pod<br/>lm-evaluation-harness]
-    GuideLLM -->|load test| vLLM[vLLM InferenceService]
-    MCQ -->|API call| vLLM
+    Operator --> MCQ[Korean MCQ Pod]
+    GuideLLM -->|load test| Model[Model Endpoint<br/>KServe / MaaS]
+    MCQ -->|API call| Model
     MCQ -->|download| HF[HuggingFace Datasets]
 ```
 
 **How it works:**
 
+- **EvalHub** is a lightweight REST API service that orchestrates LLM evaluations across multiple backends (lm-evaluation-harness, GuideLLM, RAGAS, LightEval, and more). It is GA in OpenShift AI 3.5, managed by the TrustyAI Operator.
 - **GuideLLM (Phase 1):** Run inference performance benchmarks using [GuideLLM](https://github.com/neuralmagic/guidellm) through EvalHub to measure TTFT, ITL, throughput, and end-to-end latency.
 - **Korean MCQ (Phase 2):** Run individual Korean MCQ benchmarks (KMMLU, CLIcK, HAE-RAE, etc.) through the EvalHub SDK with MLflow tracking. Summarize and export results as Markdown/HTML reports.
 - **Unified Evaluation (Phase 3):** Run multi-benchmark evaluations and unified accuracy + performance (Korean MCQ + GuideLLM) experiments under a single MLflow experiment, with comparison tables and visualization.
 
 ## Model
 
-This workshop uses **Gemma 4 (E2B-it)**, **Gemma 4 12B**, **Qwen3-4B**, **Qwen3-14B**, **EXAONE 4.0 32B**, and **Qwen3.6-27B-FP8** deployed on OpenShift AI via a custom vLLM ServingRuntime as target models for evaluation. The setup notebook includes instructions for deploying models with GPU support.
+This workshop supports two model deployment modes:
+
+| Mode | Description | Config |
+|------|-------------|--------|
+| **MaaS (Model-as-a-Service)** | External API endpoint (e.g., cloud-hosted model) | `MODEL_ENDPOINT` + `MODEL_API_KEY` in `.env` |
+| **KServe (Cluster-deployed)** | InferenceService on OpenShift AI with vLLM runtime | `MODEL_NAME` + `NAMESPACE` → auto-derived URL |
+
+Evaluated models include **Gemma 4 (E2B-it)**, **Gemma 4 12B**, **Qwen3-4B**, **Qwen3-14B**, **EXAONE 4.0 32B**, and **Qwen3.6-27B-FP8**.
 
 ## What's Included
 
 ### 0. Setup
 
-- **0_setup/0_model_deploy.ipynb**: Deploy a Gemma 4 model using a custom vLLM ServingRuntime with NVIDIA GPU support.
-- **0_setup/1_LMEval_setup.ipynb**: Configure RBAC permissions, create secrets (HF token, SA token for OAuth), and verify cluster access for LMEvalJob.
+- **0_setup/1_LMEval_setup.ipynb**: Configure RBAC permissions, create secrets (HF token, SA token), and verify cluster access for EvalHub evaluation jobs.
 - **0_setup/2_eval_hub_setup.ipynb**: Deploy the EvalHub service and MLflow on OpenShift, install the eval-hub-sdk, and verify connectivity.
 
 ### 1. GuideLLM Performance Benchmark (Phase 1)
@@ -93,11 +100,13 @@ This companion repository tracks performance of models like Gemma, Llama, Phi, Q
 
 ## Prerequisites
 
-- Red Hat OpenShift AI cluster with TrustyAI Operator installed
-- A model deployed via KServe (vLLM runtime) with OAuth auth enabled
+- Red Hat OpenShift AI 3.5+ cluster with TrustyAI Operator installed
+- EvalHub service and MLflow deployed on the cluster (setup notebook handles this)
+- A model endpoint — either:
+  - **MaaS:** External API endpoint URL + API key
+  - **KServe:** Model deployed via KServe (vLLM runtime)
 - `oc` CLI access to the cluster
 - Hugging Face API token
-- (Phase 1–3) EvalHub service and MLflow deployed on the cluster
 
 ## Quick Start
 
@@ -105,17 +114,16 @@ This companion repository tracks performance of models like Gemma, Llama, Phi, Q
 
 1. Clone this repo into your OpenShift AI Workbench:
    ```bash
-   git clone https://github.com/hyogrin/lm-eval-builder-lab.git
-   cd lm-eval-builder-lab
+   git clone https://github.com/hyogrin/rhoai-evalhub-lab.git
+   cd rhoai-evalhub-lab
    ```
 
 2. Open **`0_setup/2_eval_hub_setup.ipynb`** and run **Step 0**:
-   - Edit the 4 values in the cell (`NAMESPACE`, `MODEL_NAME`, `HF_TOKEN`, `HF_MODEL_ID`)
+   - Edit the values in the cell (`NAMESPACE`, `MODEL_NAME`, `MODEL_ENDPOINT`, `MODEL_API_KEY`, `HF_TOKEN`, `HF_MODEL_ID`)
    - Run the cell — it creates `.env` and installs all dependencies
 
 3. Run notebooks in order:
-   - `0_setup/0_model_deploy.ipynb` — Deploy model (skip if already deployed)
-   - `0_setup/1_LMEval_setup.ipynb` — One-time RBAC and secrets setup for LMEvalJob
+   - `0_setup/1_LMEval_setup.ipynb` — One-time RBAC and secrets setup for EvalHub evaluation jobs
    - `0_setup/2_eval_hub_setup.ipynb` — Deploy EvalHub + MLflow, then run **Step A-7** to generate a shared URL + token for participants
    - `1_eval_hub_guidellm_benchmark/1_guidellm_benchmark.ipynb` — Inference performance profiling (TTFT, ITL, throughput)
    - `2_eval_hub_kmcq_benchmark/1_kmcq_benchmark.ipynb` — Single Korean MCQ benchmark evaluation
@@ -128,15 +136,15 @@ No cluster setup required — the cluster owner provides you with the connection
 
 1. Clone this repo (Workbench, laptop, or any Jupyter environment):
    ```bash
-   git clone https://github.com/hyogrin/lm-eval-builder-lab.git
-   cd lm-eval-builder-lab
+   git clone https://github.com/hyogrin/rhoai-evalhub-lab.git
+   cd rhoai-evalhub-lab
    ```
 
 2. Open **`0_setup/2_eval_hub_setup.ipynb`** and run **Step 0**:
-   - Paste the values from the cluster owner: `NAMESPACE`, `MODEL_NAME`, `EVALHUB_URL`, `EVALHUB_AUTH_TOKEN`
+   - Paste the values from the cluster owner: `NAMESPACE`, `MODEL_NAME`, `MODEL_ENDPOINT`, `MODEL_API_KEY`, `EVALHUB_URL`, `EVALHUB_AUTH_TOKEN`
    - Run the cell — it creates `.env` and installs dependencies
 
-3. **Skip** `0_model_deploy`, `1_LMEval_setup`, and Part A of `2_eval_hub_setup` — go directly to Phase 1-3 notebooks
+3. **Skip** `1_LMEval_setup` and Part A of `2_eval_hub_setup` — go directly to Phase 1-3 notebooks
 
 > **Local development:** If you have [uv](https://docs.astral.sh/uv/) installed, you can use `uv sync` instead for a reproducible virtual environment.
 
@@ -288,7 +296,8 @@ No cluster setup required — the cluster owner provides you with the connection
 
 This workshop was built through real debugging and iteration on OpenShift AI. Key learnings documented:
 
-- LMEvalJob CRD uses `spec.pod.container.env` (singular), not `spec.pod.containers[].env`
+- EvalHub (GA in RHOAI 3.5) orchestrates evaluations via REST API with built-in MLflow tracking
+- The `korean-mcq` custom adapter evaluates Korean benchmarks with per-question accuracy
+- Both MaaS endpoints (external API) and KServe InferenceServices (cluster-internal) are supported
 - OAuth-protected InferenceServices require RBAC + SA token via `OPENAI_API_KEY` env var
-- The `served_model_name` in vLLM equals the InferenceService metadata name
 - SSL verification must be disabled for self-signed certs (`verify_certificate: "False"`)

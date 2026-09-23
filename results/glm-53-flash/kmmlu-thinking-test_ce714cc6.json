@@ -1,0 +1,21 @@
+{
+  "job_id": "ce714cc6-22e7-4504-8aaf-619720f8cc33",
+  "name": "kmmlu-thinking-test",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash",
+    "name": "glm-53-flash"
+  },
+  "experiment": "glm-thinking-test",
+  "benchmarks": [
+    {
+      "id": "kmmlu",
+      "provider_id": "e15177fe-9ed6-46d0-89c8-f6947ee0a101",
+      "metrics": {
+        "category_accuracy.Accounting": 100,
+        "overall_accuracy": 100,
+        "supercategory_accuracy.HUMSS": 100
+      },
+      "mlflow_run_id": "aac4436e48074a3c9cd88eb5b2a2cf30"
+    }
+  ]
+}

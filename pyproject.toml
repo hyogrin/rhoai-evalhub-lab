@@ -1,7 +1,7 @@
 [project]
-name = "rh-lmeval-builder-lab"
-version = "0.1.0"
-description = "Korean LLM evaluation workshop using TrustyAI LMEvalJob on OpenShift AI"
+name = "rhoai-evalhub-lab"
+version = "1.0.0"
+description = "Korean LLM evaluation workshop using EvalHub on Red Hat OpenShift AI 3.5"
 requires-python = ">=3.12"
 dependencies = [
     "pandas",

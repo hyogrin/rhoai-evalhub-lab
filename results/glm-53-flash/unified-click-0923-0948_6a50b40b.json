@@ -1,0 +1,32 @@
+{
+  "job_id": "6a50b40b-d176-4eb2-949c-c85f8d07c53d",
+  "name": "unified-click-0923-0948",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash",
+    "name": "glm-53-flash"
+  },
+  "experiment": "glm-53-flash-full-eval-0923-0948",
+  "benchmarks": [
+    {
+      "id": "click",
+      "provider_id": "e15177fe-9ed6-46d0-89c8-f6947ee0a101",
+      "metrics": {
+        "category_accuracy.Economy": 94.83,
+        "category_accuracy.Functional": 98.11,
+        "category_accuracy.Geography": 98.21,
+        "category_accuracy.Grammar": 97.2,
+        "category_accuracy.History": 85.62,
+        "category_accuracy.Law": 95.74,
+        "category_accuracy.Politics": 93.75,
+        "category_accuracy.Pop Culture": 100,
+        "category_accuracy.Society": 96.59,
+        "category_accuracy.Textual": 98.16,
+        "category_accuracy.Tradition": 91.39,
+        "overall_accuracy": 94.96,
+        "supercategory_accuracy.Culture": 93.89,
+        "supercategory_accuracy.Language": 97.88
+      },
+      "mlflow_run_id": "8bb6c262b6ef4e6ea50ae88f673edb8a"
+    }
+  ]
+}
