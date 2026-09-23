@@ -31,6 +31,7 @@ from evalhub.adapter import (
     MessageInfo,
     OCIArtifactSpec,
 )
+from evalhub.adapter.auth import resolve_model_credentials
 
 from datasets_config import DATASET_CONFIGS, DatasetConfig, normalize_answer, get_choices_from_example
 from parser import parse_answer
@@ -89,7 +90,7 @@ class KoreanMCQAdapter(FrameworkAdapter):
             parameters = config.parameters or {}
             limit = config.num_examples or parameters.get("limit")
             temperature = parameters.get("temperature", 0.0)
-            max_tokens = parameters.get("max_tokens", 16)
+            max_tokens = parameters.get("max_tokens", 1024)
             concurrency = parameters.get("concurrency", 20)
 
             # Phase 2: Load dataset
@@ -413,8 +414,16 @@ class KoreanMCQAdapter(FrameworkAdapter):
 
             return row
 
+        # Resolve model credentials for MaaS API key auth via sidecar ref token
+        client_headers = {}
+        creds = resolve_model_credentials()
+        if creds.api_key:
+            client_headers["Authorization"] = f"Bearer {creds.api_key}"
+            logger.info("Auth: injected model ref token into HTTP client headers")
+
         async with httpx.AsyncClient(
             base_url=base_url,
+            headers=client_headers,
             verify=False,
             timeout=httpx.Timeout(connect=10.0, read=120.0, write=10.0, pool=30.0),
             limits=httpx.Limits(
@@ -466,7 +475,8 @@ class KoreanMCQAdapter(FrameworkAdapter):
                 )
                 response.raise_for_status()
                 data = response.json()
-                content = data["choices"][0]["message"]["content"].strip()
+                raw_content = data["choices"][0]["message"].get("content")
+                content = raw_content.strip() if raw_content else ""
 
                 if self._trace_enabled:
                     self._trace_records.append({

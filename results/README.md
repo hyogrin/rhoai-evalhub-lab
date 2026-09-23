@@ -1,6 +1,6 @@
 # Evaluation Results
 
-This directory stores evaluation results from LMEvalJob runs on OpenShift AI.
+This directory stores evaluation results from EvalHub runs on OpenShift AI.
 
 ## Result Format
 
@@ -8,27 +8,30 @@ Results are stored per model in JSON format:
 
 ```
 results/
-├── gemma-4-E2B-it/
-│   ├── kmmlu_direct_law.json
-│   ├── click.json
-│   └── kobest_wic.json
-├── llama-3.1-8b-instruct/
-│   ├── kmmlu_direct_law.json
-│   └── click.json
-└── ...
+├── glm-53-flash/
+│   ├── unified-kmmlu-0921-1500_abc12345.json
+│   ├── unified-click-0921-1500_abc12345.json
+│   └── ...
+├── qwen3-14b/
+│   ├── kmmlu-eval_54c2d994.json
+│   └── ...
+└── RESULTS.md
 ```
 
-Each JSON file contains the full lm-evaluation-harness output including:
-- `results`: Aggregated scores per task
-- `configs`: Task configuration used
-- `n-samples`: Number of samples evaluated
-- `config`: Model configuration
+Each JSON file contains the EvalHub job output including:
+- `job_id`: EvalHub job identifier
+- `model`: Model endpoint and name
+- `experiment`: MLflow experiment name
+- `benchmarks`: Benchmark results with metrics
 
-## Extracting Results from LMEvalJob
+## Extracting Results from EvalHub
 
-```bash
-# Get results JSON from a completed job
-oc get lmevaljob <job-name> -n <namespace> -o jsonpath='{.status.results}' | python -m json.tool > results.json
+```python
+# Via EvalHub SDK
+from evalhub import SyncEvalHubClient
+client = SyncEvalHubClient(base_url=EVALHUB_URL, auth_token=TOKEN, insecure=True, tenant=NAMESPACE)
+job = client.jobs.get(job_id)
+print(job.results.benchmarks[0].metrics)
 ```
 
 ## Comprehensive Results
