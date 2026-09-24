@@ -1,0 +1,32 @@
+{
+  "job_id": "55417a51-24c3-4e03-883e-4a8242bd94b2",
+  "name": "click-evaluation",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash",
+    "name": "glm-53-flash"
+  },
+  "experiment": "korean-llm-evaluation",
+  "benchmarks": [
+    {
+      "id": "click",
+      "provider_id": "e15177fe-9ed6-46d0-89c8-f6947ee0a101",
+      "metrics": {
+        "category_accuracy.Economy": 94.92,
+        "category_accuracy.Functional": 98.67,
+        "category_accuracy.Geography": 95.76,
+        "category_accuracy.Grammar": 96.62,
+        "category_accuracy.History": 80.82,
+        "category_accuracy.Law": 92.48,
+        "category_accuracy.Politics": 93.98,
+        "category_accuracy.Pop Culture": 100,
+        "category_accuracy.Society": 95.44,
+        "category_accuracy.Textual": 97.48,
+        "category_accuracy.Tradition": 91.28,
+        "overall_accuracy": 93.29,
+        "supercategory_accuracy.Culture": 91.68,
+        "supercategory_accuracy.Language": 97.4
+      },
+      "mlflow_run_id": "1db3c3d4c8d1414882cf2fc4cf457c7f"
+    }
+  ]
+}

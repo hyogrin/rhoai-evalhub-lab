@@ -32,7 +32,7 @@ This workshop supports two model deployment modes:
 | **MaaS (Model-as-a-Service)** | External API endpoint (e.g., cloud-hosted model) | `MODEL_ENDPOINT` + `MODEL_API_KEY` in `.env` |
 | **KServe (Cluster-deployed)** | InferenceService on OpenShift AI with vLLM runtime | `MODEL_NAME` + `NAMESPACE` → auto-derived URL |
 
-Evaluated models include **Gemma 4 (E2B-it)**, **Gemma 4 12B**, **Qwen3-4B**, **Qwen3-14B**, **EXAONE 4.0 32B**, and **Qwen3.6-27B-FP8**.
+Evaluated models include **Gemma 4 (E2B-it)**, **Gemma 4 12B**, **Qwen3-4B**, **Qwen3-14B**, **EXAONE 4.0 32B**, **Qwen3.6-27B-FP8**, and **GLM-53-Flash** (MaaS).
 
 ## What's Included
 
@@ -72,13 +72,13 @@ For Qwen3-4B, **MLflow Tracing** is enabled — each LLM call (prompt/response) 
 
 ![evaluation result on MLflow](./images/eval-result-mlflow.png)
 
-| Benchmark | Gemma4-E2B | Qwen3-4B | Qwen3-14B | EXAONE4-32B | Gemma4-12B | Qwen3.6-27B | Samples |
-|:----------|-------:|-------:|-------:|-------:|-------:|-------:|-------:|
-| CLIcK | 56.11% | 56.66% | 66.82% | 68.30% | 73.88% | 75.90% | 1,995 |
-| HAE-RAE Bench 1.1 | 51.90% | 46.22% | 54.64% | 63.20% | 69.87% | 60.43% | 1,538 |
-| KMMLU (0-shot) | 36.45% | 35.70% | 48.30% | 52.24% | 57.51% | 62.50% | 10,000 |
-| KMMLU-HARD (0-shot) | 23.70% | 21.88% | 27.95% | 29.48% | 33.80% | 43.06% | 10,000 |
-| KoBEST BoolQ | 85.90% | 86.18% | 93.23% | 91.52% | 96.08% | 96.65% | 1,404 |
+| Benchmark | Gemma4-E2B | Qwen3-4B | Qwen3-14B | EXAONE4-32B | Gemma4-12B | Qwen3.6-27B | GLM-53-Flash | Samples |
+|:----------|-------:|-------:|-------:|-------:|-------:|-------:|-------:|-------:|
+| CLIcK | 56.11% | 56.66% | 66.82% | 68.30% | 73.88% | 75.90% | **94.96%** | 1,995 |
+| HAE-RAE Bench 1.1 | 51.90% | 46.22% | 54.64% | 63.20% | 69.87% | 60.43% | **77.01%** | 1,538 |
+| KMMLU (0-shot) | 36.45% | 35.70% | 48.30% | 52.24% | 57.51% | 62.50% | **86.48%** | 10,000 |
+| KMMLU-HARD (0-shot) | 23.70% | 21.88% | 27.95% | 29.48% | 33.80% | 43.06% | **79.21%** | 10,000 |
+| KoBEST BoolQ | 85.90% | 86.18% | 93.23% | 91.52% | 96.08% | 96.65% | **97.77%** | 1,404 |
 
 
 ### Performance (GuideLLM Throughput)

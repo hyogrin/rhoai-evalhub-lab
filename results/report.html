@@ -105,10 +105,14 @@
 <body>
 <div class="container">
     <h1>Korean LLM Benchmark Report</h1>
-    <p class="subtitle">Generated: 2026-09-22 15:11:18 | Models: 5 | Tasks: 5</p>
+    <p class="subtitle">Generated: 2026-09-23 17:08:12 | Models: 5 | Tasks: 5</p>
     <div class="card">
         <h2>Overall Accuracy (%)</h2>
         <div class="summary-grid">
+            <div class="summary-item">
+                <div class="model-name">glm-53-flash</div>
+                <div class="score">87.1%</div>
+            </div>
             <div class="summary-item">
                 <div class="model-name">gemma4-12b</div>
                 <div class="score">66.2%</div>
@@ -125,10 +129,6 @@
                 <div class="model-name">qwen36-27b</div>
                 <div class="score">58.8%</div>
             </div>
-            <div class="summary-item">
-                <div class="model-name">glm-53-flash</div>
-                <div class="score">0.0%</div>
-            </div>
         </div>
     </div>
 
@@ -143,12 +143,12 @@
         <table>
             <thead><tr><th>Task</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
             <tbody>
-            <tr><td>click</td><td>68.30</td><td>73.88</td><td>-</td><td>66.82</td><td class="best">75.90</td></tr>
-            <tr><td>haerae</td><td>63.20</td><td class="best">69.87</td><td>-</td><td>57.14</td><td>16.00</td></tr>
-            <tr><td>kmmlu</td><td>52.24</td><td>57.51</td><td>-</td><td>53.37</td><td class="best">62.50</td></tr>
-            <tr><td>kmmlu_hard</td><td>29.48</td><td>33.80</td><td>-</td><td>27.51</td><td class="best">43.06</td></tr>
-            <tr><td>kobest_boolq</td><td>91.52</td><td>96.08</td><td>-</td><td>93.23</td><td class="best">96.65</td></tr>
-            <tr style="font-weight:700; background:#e9ecef;"><td>Overall</td><td>60.95</td><td class="best">66.23</td><td>0.00</td><td>59.61</td><td>58.82</td></tr>
+            <tr><td>click</td><td>68.30</td><td>73.88</td><td class="best">94.96</td><td>66.82</td><td>75.90</td></tr>
+            <tr><td>haerae</td><td>63.20</td><td>69.87</td><td class="best">77.01</td><td>57.14</td><td>16.00</td></tr>
+            <tr><td>kmmlu</td><td>52.24</td><td>57.51</td><td class="best">86.48</td><td>53.37</td><td>62.50</td></tr>
+            <tr><td>kmmlu_hard</td><td>29.48</td><td>33.80</td><td class="best">79.21</td><td>27.51</td><td>43.06</td></tr>
+            <tr><td>kobest_boolq</td><td>91.52</td><td>96.08</td><td class="best">97.77</td><td>93.23</td><td>96.65</td></tr>
+            <tr style="font-weight:700; background:#e9ecef;"><td>Overall</td><td>60.95</td><td>66.23</td><td class="best">87.09</td><td>59.61</td><td>58.82</td></tr>
             </tbody>
         </table>
         </div>
@@ -159,7 +159,7 @@
         type: 'bar',
         data: {
             labels: ["click", "haerae", "kmmlu", "kmmlu_hard", "kobest_boolq"],
-            datasets: [{ label: "exaone4-32b", data: [68.3, 63.2, 52.24, 29.48, 91.52], backgroundColor: "#4e79a780", borderColor: "#4e79a7", borderWidth: 1 }, { label: "gemma4-12b", data: [73.88, 69.87, 57.51, 33.8, 96.08], backgroundColor: "#f28e2b80", borderColor: "#f28e2b", borderWidth: 1 }, { label: "glm-53-flash", data: [null, null, null, null, null], backgroundColor: "#e1575980", borderColor: "#e15759", borderWidth: 1 }, { label: "qwen3-14b", data: [66.82, 57.14, 53.37, 27.51, 93.23], backgroundColor: "#76b7b280", borderColor: "#76b7b2", borderWidth: 1 }, { label: "qwen36-27b", data: [75.9, 16.0, 62.5, 43.06, 96.65], backgroundColor: "#59a14f80", borderColor: "#59a14f", borderWidth: 1 }]
+            datasets: [{ label: "exaone4-32b", data: [68.3, 63.2, 52.24, 29.48, 91.52], backgroundColor: "#4e79a780", borderColor: "#4e79a7", borderWidth: 1 }, { label: "gemma4-12b", data: [73.88, 69.87, 57.51, 33.8, 96.08], backgroundColor: "#f28e2b80", borderColor: "#f28e2b", borderWidth: 1 }, { label: "glm-53-flash", data: [94.96, 77.01, 86.48, 79.21, 97.77], backgroundColor: "#e1575980", borderColor: "#e15759", borderWidth: 1 }, { label: "qwen3-14b", data: [66.82, 57.14, 53.37, 27.51, 93.23], backgroundColor: "#76b7b280", borderColor: "#76b7b2", borderWidth: 1 }, { label: "qwen36-27b", data: [75.9, 16.0, 62.5, 43.06, 96.65], backgroundColor: "#59a14f80", borderColor: "#59a14f", borderWidth: 1 }]
         },
         options: {
             responsive: true,

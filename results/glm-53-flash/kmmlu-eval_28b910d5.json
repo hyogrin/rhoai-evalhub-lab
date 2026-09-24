@@ -1,0 +1,36 @@
+{
+  "job_id": "28b910d5-4d6b-4481-9a82-3b8055727ef3",
+  "name": "kmmlu-eval",
+  "model": {
+    "url": "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash",
+    "name": "glm-53-flash"
+  },
+  "experiment": "korean-kmmlu-eval",
+  "benchmarks": [
+    {
+      "id": "kmmlu",
+      "provider_id": "e15177fe-9ed6-46d0-89c8-f6947ee0a101",
+      "metrics": {
+        "category_accuracy.Accounting": 94.79,
+        "category_accuracy.Agricultural Sciences": 75.72,
+        "category_accuracy.Aviation Engineering and Maintenance": 88.67,
+        "category_accuracy.Biology": 88.05,
+        "category_accuracy.Chemical Engineering": 93.72,
+        "category_accuracy.Chemistry": 96.48,
+        "category_accuracy.Civil Engineering": 85.91,
+        "category_accuracy.Computer Science": 95.91,
+        "category_accuracy.Construction": 75.48,
+        "category_accuracy.Criminal Law": 83.75,
+        "category_accuracy.Ecology": 81.47,
+        "category_accuracy.Economics": 94.83,
+        "category_accuracy.Education": 94.68,
+        "category_accuracy.Electrical Engineering": 75.32,
+        "overall_accuracy": 85.9,
+        "supercategory_accuracy.HUMSS": 94.77,
+        "supercategory_accuracy.Other": 84.86,
+        "supercategory_accuracy.STEM": 87.57
+      },
+      "mlflow_run_id": "7277874d4dea467080f2c77f96e5f136"
+    }
+  ]
+}
