@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RHOAI EvalHub Lab — Reports</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; color: #333; padding: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #1a1a2e; border-bottom: 3px solid #4e79a7; padding-bottom: 0.5rem; }
+        .card { background: white; border-radius: 12px; padding: 1.5rem; margin: 1rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card h2 { margin: 0 0 0.5rem; font-size: 1.2rem; }
+        .card p { color: #666; margin: 0 0 1rem; font-size: 0.9rem; }
+        .card a { display: inline-block; background: #4e79a7; color: white; padding: 0.5rem 1.2rem; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }
+        .card a:hover { background: #3a5f8a; }
+        footer { text-align: center; margin-top: 2rem; color: #999; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 RHOAI EvalHub Lab — Reports</h1>
+
+    <div class="card">
+        <h2>Korean LLM Benchmark Report</h2>
+        <p>Multi-model accuracy comparison (GLM-53-Flash, Gemma4-12B, Qwen3.6-27B, EXAONE4-32B, Qwen3-14B) across 5 Korean benchmarks — CLIcK, KMMLU, HAE-RAE, KMMLU-HARD, KoBEST BoolQ. Includes per-category breakdowns and interactive Chart.js visualizations.</p>
+        <a href="report.html">View Report →</a>
+    </div>
+
+    <div class="card">
+        <h2>Guardrail Content Safety Evaluation Report</h2>
+        <p>NeMo Guardrails + Llama 3.1 Nemotron Safety Guard 8B evaluated on 2,000 samples from the K-MHaS Korean hate speech dataset. Includes confusion matrix, per-category breakdown, and LLM-generated recommendations.</p>
+        <a href="guardrail/guardrail_eval_guardrail-content-safety_2000_report.html">View Report →</a>
+    </div>
+
+    <footer>
+        <p><a href="https://github.com/hyogrin/rhoai-lmeval-builder-lab" style="color:#4e79a7;">hyogrin/rhoai-lmeval-builder-lab</a></p>
+    </footer>
+</div>
+</body>
+</html>

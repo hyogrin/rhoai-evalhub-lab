@@ -94,8 +94,8 @@ Evaluated models include **GLM-53-Flash** (MaaS), **Gemma 4 12B**, **Qwen3.6-27B
 
 | Report                                                                                                      | Description                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [Korean LLM Benchmark Report](./results/report.html)                                                        | Multi-model accuracy comparison across 5 Korean benchmarks with interactive Chart.js visualizations                       |
-| [Guardrail Evaluation Report](./results/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) | Content safety evaluation on K-MHaS (2,000 samples) — confusion matrix, category breakdown, LLM-generated recommendations |
+| [Korean LLM Benchmark Report](https://hyogrin.github.io/rhoai-evalhub-lab/report.html)                                                        | Multi-model accuracy comparison across 5 Korean benchmarks with interactive Chart.js visualizations and per-category breakdowns |
+| [Guardrail Evaluation Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) | Content safety evaluation on K-MHaS (2,000 samples) — confusion matrix, category breakdown, LLM-generated recommendations |
 
 
 ## Evaluation Results
@@ -128,7 +128,7 @@ We evaluated **GLM-53-Flash**, **Gemma 4 12B**, **Qwen3.6-27B-FP8**, **EXAONE 4.
 | Requests/sec      | 1.00         | 0.74        | 0.36       | 0.19      | 0.18        |
 
 
-> 📄 **Full report:** [Korean LLM Benchmark Report](./results/report.html) — interactive Chart.js visualizations with per-category accuracy comparisons across all models.
+> 📄 **Full report:** [Korean LLM Benchmark Report](https://hyogrin.github.io/rhoai-evalhub-lab/report.html) — interactive Chart.js visualizations with per-category accuracy comparisons across all models.
 
 ### Guardrail Content Safety Evaluation Results
 
@@ -172,7 +172,7 @@ We evaluated the **NeMo Guardrails + Llama 3.1 Nemotron Safety Guard 8B** conten
 - **FNR of 22.4%** means ~1 in 5 hate speech samples passes through undetected, particularly in categories with implicit or culturally-specific expressions.
 - Regex-only configuration (`guardrail-regex-only`) **cannot detect Korean hate speech at all** — it only matches English patterns and structured data (SSN, credit cards, etc.). The content safety model is essential for multilingual coverage.
 
-> 📄 **Full report:** [guardrail_eval_guardrail-content-safety_2000_report.html](./results/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) — includes per-category breakdown and LLM-generated recommendations.
+> 📄 **Full report:** [Guardrail Evaluation Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) — includes per-category breakdown and LLM-generated recommendations.
 
 ## Prerequisites
 
