@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guardrail-regex-only
+data:
+  config.yaml: |
+    models:
+      - type: main
+        engine: openai
+        model: ${MODEL_NAME}
+        api_key_env_var: OPENAI_API_KEY
+        parameters:
+          base_url: "${LLM_BASE_URL}"
+    rails:
+      config:
+        regex_detection:
+          input:
+            patterns:
+              - "\\d{3}-\\d{2}-\\d{4}"
+              - "\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}"
+              - "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+              - "\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}"
+              - "\\b(password|hack|exploit|vulnerability|secret|api[_-]?key|token)\\b"
+              - "\\b(violence|illegal|harmful)\\b"
+              - "\\b(chatgpt|openai|claude|anthropic)\\b"
+            case_insensitive: true
+          output:
+            patterns:
+              - "\\d{3}-\\d{2}-\\d{4}"
+              - "\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}"
+              - "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+              - "\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}"
+              - "\\b(chatgpt|openai|claude|anthropic)\\b"
+              - "\\b(confidential|internal[_-]?only|do[_-]?not[_-]?share)\\b"
+            case_insensitive: true
+        sensitive_data_detection:
+          input:
+            entities:
+              - CREDIT_CARD
+              - US_SSN
+              - EMAIL_ADDRESS
+              - PHONE_NUMBER
+          output:
+            entities:
+              - CREDIT_CARD
+              - US_SSN
+      input:
+        flows:
+          - detect sensitive data on input
+          - regex check input
+      output:
+        streaming:
+          enabled: true
+        flows:
+          - detect sensitive data on output
+          - regex check output
+  rails.co: |
+    # Built-in flows only -- no custom Colang needed.
