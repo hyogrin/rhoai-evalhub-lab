@@ -1,0 +1,38 @@
+# MLflow Workspace Configuration for EvalHub
+#
+# MLflow 3.x with --enable-workspaces requires two resources per namespace:
+#   1. mlflow-artifact-connection Secret — S3 credentials for artifact storage
+#   2. MLflowConfig CR — registers the namespace as an MLflow workspace
+#
+# Without these, EvalHub cannot create MLflow experiments and all job
+# submissions will fail with: "Workspace context is required for this request."
+#
+# After creating these resources, restart the EvalHub pod so it re-probes
+# MLflow workspace support on startup:
+#   oc delete pod -l app=evalhub -n <namespace>
+#
+# Usage:
+#   export NAMESPACE=demo
+#   cat mlflow-workspace.yaml | envsubst | oc apply -f -
+#   oc delete pod -l app=evalhub -n $NAMESPACE
+# ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mlflow-artifact-connection
+  namespace: ${NAMESPACE}
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+  AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+  AWS_S3_BUCKET: "${AWS_S3_BUCKET}"
+  AWS_S3_ENDPOINT: "${AWS_S3_ENDPOINT}"
+  AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION}"
+---
+apiVersion: mlflow.kubeflow.org/v1
+kind: MLflowConfig
+metadata:
+  name: mlflow
+  namespace: ${NAMESPACE}
+spec:
+  artifactRootSecret: mlflow-artifact-connection

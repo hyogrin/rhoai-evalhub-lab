@@ -1,0 +1,640 @@
+# PIPELINE DEFINITION
+# Name: korean-llm-eval-pipeline
+# Description: Korean LLM evaluation: accuracy (5 benchmarks) + GuideLLM performance + report + Slack notification
+# Inputs:
+#    auth_token: str
+#    evalhub_url: str
+#    experiment_name: str [Default: 'pipeline-eval']
+#    limit: int [Default: 10000.0]
+#    model_api_key: str [Default: '']
+#    model_endpoint: str
+#    model_name: str [Default: 'glm-53-flash']
+#    namespace: str [Default: 'demo']
+#    provider_name: str [Default: 'Korean MCQ Evaluation']
+#    slack_webhook_url: str [Default: '']
+components:
+  comp-generate-reports:
+    executorLabel: exec-generate-reports
+    inputDefinitions:
+      artifacts:
+        accuracy_results:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        performance_results:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        report_html:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+        results_md:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+  comp-run-accuracy-benchmarks:
+    executorLabel: exec-run-accuracy-benchmarks
+    inputDefinitions:
+      parameters:
+        auth_token:
+          parameterType: STRING
+        evalhub_url:
+          parameterType: STRING
+        experiment_name:
+          parameterType: STRING
+        limit:
+          parameterType: NUMBER_INTEGER
+        model_api_key:
+          parameterType: STRING
+        model_endpoint:
+          parameterType: STRING
+        model_name:
+          parameterType: STRING
+        namespace:
+          parameterType: STRING
+        provider_id:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        results:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-run-performance-benchmark:
+    executorLabel: exec-run-performance-benchmark
+    inputDefinitions:
+      parameters:
+        auth_token:
+          parameterType: STRING
+        evalhub_url:
+          parameterType: STRING
+        experiment_name:
+          parameterType: STRING
+        model_endpoint:
+          parameterType: STRING
+        model_name:
+          parameterType: STRING
+        namespace:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        results:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-send-notification:
+    executorLabel: exec-send-notification
+    inputDefinitions:
+      artifacts:
+        accuracy_results:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        performance_results:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+      parameters:
+        slack_webhook_url:
+          parameterType: STRING
+  comp-setup-and-verify:
+    executorLabel: exec-setup-and-verify
+    inputDefinitions:
+      parameters:
+        auth_token:
+          parameterType: STRING
+        evalhub_url:
+          parameterType: STRING
+        namespace:
+          parameterType: STRING
+        provider_name:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-generate-reports:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - generate_reports
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.17.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef generate_reports(\n    accuracy_results: Input[Dataset],\n  \
+          \  performance_results: Input[Dataset],\n    report_html: Output[Artifact],\n\
+          \    results_md: Output[Artifact],\n):\n    \"\"\"Generate report.html (Chart.js)\
+          \ and RESULTS.md from evaluation results.\"\"\"\n    import json\n    from\
+          \ datetime import datetime\n\n    acc_data = json.load(open(accuracy_results.path))\n\
+          \    perf_data = json.load(open(performance_results.path))\n\n    model_name\
+          \ = acc_data.get(\"model\", \"unknown\")\n    benchmarks = acc_data.get(\"\
+          benchmarks\", {})\n\n    score_table = {}\n    for bm_id, bm_result in benchmarks.items():\n\
+          \        metrics = bm_result.get(\"metrics\", {})\n        overall = metrics.get(\"\
+          overall_accuracy\")\n        if overall is not None:\n            score_table[bm_id]\
+          \ = round(float(overall), 2)\n\n    perf_metrics = perf_data.get(\"metrics\"\
+          , {})\n\n    # --- RESULTS.md ---\n    md_lines = [\"# Evaluation Results\"\
+          , \"\"]\n    md_lines.append(\"Model: \" + model_name)\n    md_lines.append(\"\
+          Generated: \" + datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\"))\n    md_lines.append(\"\
+          \")\n    md_lines.append(\"## Accuracy\")\n    md_lines.append(\"\")\n \
+          \   md_lines.append(\"| Benchmark | Accuracy |\")\n    md_lines.append(\"\
+          |:---|---:|\")\n    for bm_id in sorted(score_table.keys()):\n        md_lines.append(\"\
+          | \" + bm_id + \" | \" + str(score_table[bm_id]) + \"% |\")\n    md_lines.append(\"\
+          \")\n\n    if perf_metrics:\n        md_lines.append(\"## Performance\"\
+          )\n        md_lines.append(\"\")\n        md_lines.append(\"| Metric | Value\
+          \ |\")\n        md_lines.append(\"|:---|---:|\")\n        for k in [\"output_tokens_per_second\"\
+          , \"prompt_tokens_per_second\", \"requests_per_second\"]:\n            v\
+          \ = perf_metrics.get(k)\n            if v is not None:\n               \
+          \ md_lines.append(\"| \" + k + \" | \" + str(round(float(v), 2)) + \" |\"\
+          )\n        md_lines.append(\"\")\n\n    with open(results_md.path, \"w\"\
+          ) as f:\n        f.write(\"\\n\".join(md_lines))\n    print(\"RESULTS.md\
+          \ generated\")\n\n    # --- report.html ---\n    tasks_sorted = sorted(score_table.keys())\n\
+          \    timestamp = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n    overall_avg\
+          \ = round(sum(score_table.values()) / len(score_table), 2) if score_table\
+          \ else 0\n\n    html = '<!DOCTYPE html><html lang=\"ko\"><head>'\n    html\
+          \ += '<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,\
+          \ initial-scale=1.0\">'\n    html += '<title>Korean LLM Benchmark Report</title>'\n\
+          \    html += '<script src=\"https://cdn.jsdelivr.net/npm/chart.js@4\"></script>'\n\
+          \    html += \"<style>\"\n    html += \"* { margin: 0; padding: 0; box-sizing:\
+          \ border-box; }\"\n    html += \"body { font-family: -apple-system, sans-serif;\
+          \ background: #f8f9fa; color: #333; padding: 2rem; }\"\n    html += \".container\
+          \ { max-width: 1200px; margin: 0 auto; }\"\n    html += \"h1 { font-size:\
+          \ 1.8rem; margin-bottom: 0.5rem; }\"\n    html += \".subtitle { color: #666;\
+          \ margin-bottom: 2rem; font-size: 0.9rem; }\"\n    html += \".card { background:\
+          \ white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow:\
+          \ 0 2px 8px rgba(0,0,0,0.06); }\"\n    html += \".card h2 { font-size: 1.2rem;\
+          \ margin-bottom: 1rem; border-bottom: 2px solid #4e79a7; padding-bottom:\
+          \ 0.5rem; }\"\n    html += \"table { width: 100%; border-collapse: collapse;\
+          \ font-size: 0.85rem; }\"\n    html += \"th, td { padding: 0.6rem 0.8rem;\
+          \ text-align: center; border: 1px solid #e9ecef; }\"\n    html += \"th {\
+          \ background: #f1f3f5; font-weight: 600; }\"\n    html += \"th:first-child,\
+          \ td:first-child { text-align: left; }\"\n    html += \".chart-container\
+          \ { position: relative; height: 400px; margin: 1rem 0; }\"\n    html +=\
+          \ \"footer { text-align: center; margin-top: 2rem; color: #999; font-size:\
+          \ 0.8rem; }\"\n    html += \"</style></head><body><div class='container'>\"\
+          \n\n    html += \"<h1>Korean LLM Benchmark Report</h1>\"\n    html += \"\
+          <p class='subtitle'>Generated: \" + timestamp + \" | Model: \" + model_name\
+          \ + \" | Tasks: \" + str(len(tasks_sorted)) + \"</p>\"\n\n    html += '<div\
+          \ class=\"card\"><h2>Overall Accuracy</h2>'\n    html += '<p style=\"font-size:2rem;\
+          \ font-weight:700; text-align:center;\">' + str(overall_avg) + \"%</p>\"\
+          \n    html += '<p style=\"text-align:center; color:#666;\">' + model_name\
+          \ + \"</p></div>\"\n\n    if tasks_sorted:\n        html += '<div class=\"\
+          card\"><h2>Score Comparison</h2>'\n        html += '<div class=\"chart-container\"\
+          ><canvas id=\"mainChart\"></canvas></div></div>'\n\n    html += '<div class=\"\
+          card\"><h2>Detailed Results</h2><table>'\n    html += \"<thead><tr><th>Benchmark</th><th>Accuracy\
+          \ (%)</th></tr></thead><tbody>\"\n    for bm_id in tasks_sorted:\n     \
+          \   html += \"<tr><td>\" + bm_id + \"</td><td>\" + str(score_table[bm_id])\
+          \ + \"</td></tr>\"\n    html += '<tr style=\"font-weight:700; background:#e9ecef;\"\
+          ><td>Overall</td><td>' + str(overall_avg) + \"</td></tr>\"\n    html +=\
+          \ \"</tbody></table></div>\"\n\n    if perf_metrics:\n        html += '<div\
+          \ class=\"card\"><h2>Performance</h2><table>'\n        html += \"<thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>\"\
+          \n        for k in [\"output_tokens_per_second\", \"prompt_tokens_per_second\"\
+          , \"requests_per_second\"]:\n            v = perf_metrics.get(k)\n     \
+          \       if v is not None:\n                html += \"<tr><td>\" + k.replace(\"\
+          _\", \" \").title() + \"</td><td>\" + str(round(float(v), 2)) + \"</td></tr>\"\
+          \n        html += \"</tbody></table></div>\"\n\n    if tasks_sorted:\n \
+          \       data_str = \", \".join(str(score_table[t]) for t in tasks_sorted)\n\
+          \        labels_str = \", \".join('\"' + t + '\"' for t in tasks_sorted)\n\
+          \        html += \"<script>\"\n        html += \"new Chart(document.getElementById('mainChart'),\
+          \ {\"\n        html += \"type: 'bar', data: {\"\n        html += \"labels:\
+          \ [\" + labels_str + \"],\"\n        html += 'datasets: [{ label: \"' +\
+          \ model_name + '\", data: [' + data_str + '],'\n        html += 'backgroundColor:\
+          \ \"#4e79a780\", borderColor: \"#4e79a7\", borderWidth: 1 }]'\n        html\
+          \ += \"}, options: { responsive: true, maintainAspectRatio: false,\"\n \
+          \       html += \"scales: { y: { beginAtZero: true, max: 100,\"\n      \
+          \  html += \"title: { display: true, text: 'Accuracy (%)' } } } } });\"\n\
+          \        html += \"</script>\"\n\n    html += \"<footer>Generated by Korean\
+          \ LLM Evaluation Pipeline</footer>\"\n    html += \"</div></body></html>\"\
+          \n\n    with open(report_html.path, \"w\") as f:\n        f.write(html)\n\
+          \    print(\"report.html generated\")\n\n"
+        image: registry.redhat.io/ubi9/python-311:latest
+    exec-run-accuracy-benchmarks:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - run_accuracy_benchmarks
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'eval-hub-sdk[client]==1.0.5'\
+          \  &&  python3 -m pip install --quiet --no-warn-script-location 'kfp==2.17.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef run_accuracy_benchmarks(\n    evalhub_url: str,\n    auth_token:\
+          \ str,\n    namespace: str,\n    model_endpoint: str,\n    model_name: str,\n\
+          \    model_api_key: str,\n    provider_id: str,\n    limit: int,\n    experiment_name:\
+          \ str,\n    results: Output[Dataset],\n):\n    \"\"\"Submit 5 Korean MCQ\
+          \ benchmarks and poll until all complete.\"\"\"\n    import json\n    import\
+          \ time\n\n    from evalhub import (\n        SyncEvalHubClient,\n      \
+          \  ModelConfig,\n        BenchmarkConfig,\n        JobSubmissionRequest,\n\
+          \        ExperimentConfig,\n    )\n\n    client = SyncEvalHubClient(\n \
+          \       base_url=evalhub_url,\n        auth_token=auth_token,\n        insecure=True,\n\
+          \        tenant=namespace,\n    )\n\n    model = ModelConfig(url=model_endpoint,\
+          \ name=model_name)\n    if model_api_key:\n        from evalhub.models.api\
+          \ import ModelAuth\n        model.auth = ModelAuth(secret_ref=model_api_key)\n\
+          \n    benchmarks = [\"click\", \"haerae\", \"kmmlu\", \"kmmlu_hard\", \"\
+          kobest_boolq\"]\n    job_ids = []\n\n    for bm in benchmarks:\n       \
+          \ params = {\"temperature\": 0.0, \"max_tokens\": 1024}\n        if limit\
+          \ > 0:\n            params[\"limit\"] = limit\n\n        req = JobSubmissionRequest(\n\
+          \            name=\"pipeline-\" + bm + \"-\" + model_name,\n           \
+          \ description=\"Pipeline accuracy: \" + bm,\n            tags=[\"pipeline\"\
+          , \"accuracy\", model_name],\n            model=model,\n            benchmarks=[\n\
+          \                BenchmarkConfig(\n                    id=bm,\n        \
+          \            provider_id=provider_id,\n                    parameters=params,\n\
+          \                )\n            ],\n            experiment=ExperimentConfig(name=experiment_name),\n\
+          \        )\n        job = client.jobs.submit(req)\n        job_ids.append((bm,\
+          \ job.id))\n        print(\"  [\" + bm + \"] submitted: \" + job.id)\n\n\
+          \    print(str(len(job_ids)) + \" accuracy jobs submitted. Polling...\"\
+          )\n\n    # Poll until all complete (max 45 min)\n    all_results = {}\n\
+          \    for i in range(180):\n        states = {}\n        for bm, jid in job_ids:\n\
+          \            j = client.jobs.get(jid)\n            states[bm] = j.state.value\n\
+          \n        status_str = \" | \".join(k + \"=\" + v for k, v in states.items())\n\
+          \        if i % 4 == 0:\n            print(\"  [\" + str(i * 15) + \"s]\
+          \ \" + status_str)\n\n        if all(s in (\"completed\", \"failed\", \"\
+          cancelled\", \"partially_failed\") for s in states.values()):\n        \
+          \    print(\"All accuracy jobs finished!\")\n            break\n       \
+          \ time.sleep(15)\n\n    # Collect results\n    for bm, jid in job_ids:\n\
+          \        j = client.jobs.get(jid)\n        bm_data = {\"state\": j.state.value,\
+          \ \"metrics\": {}, \"mlflow_run_id\": None}\n        if hasattr(j, \"results\"\
+          ) and j.results:\n            for r in j.results.benchmarks:\n         \
+          \       bm_data[\"metrics\"] = dict(r.metrics) if r.metrics else {}\n  \
+          \              bm_data[\"mlflow_run_id\"] = r.mlflow_run_id\n          \
+          \      acc = r.metrics.get(\"overall_accuracy\", \"N/A\")\n            \
+          \    print(\"  \" + bm + \" = \" + str(acc) + \"%\")\n        all_results[bm]\
+          \ = bm_data\n\n    output = {\n        \"model\": model_name,\n        \"\
+          experiment\": experiment_name,\n        \"benchmarks\": all_results,\n \
+          \   }\n    with open(results.path, \"w\") as f:\n        json.dump(output,\
+          \ f, indent=2)\n    print(\"Accuracy results saved.\")\n\n"
+        image: registry.redhat.io/ubi9/python-311:latest
+    exec-run-performance-benchmark:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - run_performance_benchmark
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'eval-hub-sdk[client]==1.0.5'\
+          \  &&  python3 -m pip install --quiet --no-warn-script-location 'kfp==2.17.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef run_performance_benchmark(\n    evalhub_url: str,\n    auth_token:\
+          \ str,\n    namespace: str,\n    model_endpoint: str,\n    model_name: str,\n\
+          \    experiment_name: str,\n    results: Output[Dataset],\n):\n    \"\"\"\
+          Run GuideLLM throughput benchmark via EvalHub SDK.\"\"\"\n    import json\n\
+          \    import time\n\n    from evalhub import (\n        SyncEvalHubClient,\n\
+          \        ModelConfig,\n        BenchmarkConfig,\n        JobSubmissionRequest,\n\
+          \        ExperimentConfig,\n    )\n\n    client = SyncEvalHubClient(\n \
+          \       base_url=evalhub_url,\n        auth_token=auth_token,\n        insecure=True,\n\
+          \        tenant=namespace,\n    )\n\n    # GuideLLM needs /v1 base endpoint\n\
+          \    guidellm_url = model_endpoint.rstrip(\"/\")\n    for suffix in [\"\
+          /v1/completions\", \"/v1/chat/completions\"]:\n        guidellm_url = guidellm_url.replace(suffix,\
+          \ \"/v1\")\n    if not guidellm_url.endswith(\"/v1\"):\n        guidellm_url\
+          \ += \"/v1\"\n\n    perf_request = JobSubmissionRequest(\n        name=\"\
+          pipeline-perf-\" + model_name,\n        description=\"GuideLLM throughput\
+          \ for \" + model_name,\n        tags=[\"pipeline\", \"performance\", \"\
+          guidellm\", model_name],\n        model=ModelConfig(url=guidellm_url, name=model_name),\n\
+          \        benchmarks=[\n            BenchmarkConfig(\n                id=\"\
+          throughput\",\n                provider_id=\"guidellm\",\n             \
+          \   parameters={\n                    \"profile\": \"throughput\",\n   \
+          \                 \"max_seconds\": 180,\n                    \"max_requests\"\
+          : 50,\n                    \"data\": \"prompt_tokens=128,output_tokens=64\"\
+          ,\n                    \"request_type\": \"chat_completions\",\n       \
+          \         },\n            )\n        ],\n        experiment=ExperimentConfig(name=experiment_name),\n\
+          \    )\n\n    perf_job = client.jobs.submit(perf_request)\n    print(\"\
+          GuideLLM job submitted: \" + perf_job.id)\n\n    # Poll (max 15 min)\n \
+          \   perf_metrics = {}\n    state = \"unknown\"\n    for i in range(90):\n\
+          \        j = client.jobs.get(perf_job.id)\n        state = j.state.value\n\
+          \        if state in (\"completed\", \"failed\", \"cancelled\", \"partially_failed\"\
+          ):\n            print(\"GuideLLM \" + state)\n            if hasattr(j,\
+          \ \"results\") and j.results:\n                for bm in j.results.benchmarks:\n\
+          \                    perf_metrics = dict(bm.metrics) if bm.metrics else\
+          \ {}\n                    for k, v in sorted(perf_metrics.items()):\n  \
+          \                      print(\"  \" + k + \": \" + str(v))\n           \
+          \ break\n        if i % 3 == 0:\n            print(\"  [\" + str(i * 10)\
+          \ + \"s] \" + state)\n        time.sleep(10)\n\n    output = {\n       \
+          \ \"model\": model_name,\n        \"state\": state,\n        \"metrics\"\
+          : perf_metrics,\n    }\n    with open(results.path, \"w\") as f:\n     \
+          \   json.dump(output, f, indent=2)\n    print(\"Performance results saved.\"\
+          )\n\n"
+        image: registry.redhat.io/ubi9/python-311:latest
+    exec-send-notification:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - send_notification
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'requests'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'kfp==2.17.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef send_notification(\n    accuracy_results: Input[Dataset],\n \
+          \   performance_results: Input[Dataset],\n    slack_webhook_url: str,\n\
+          ):\n    \"\"\"Send evaluation summary via Slack Incoming Webhook.\"\"\"\n\
+          \    import json\n\n    import requests\n\n    acc_data = json.load(open(accuracy_results.path))\n\
+          \    perf_data = json.load(open(performance_results.path))\n\n    model\
+          \ = acc_data.get(\"model\", \"unknown\")\n    benchmarks = acc_data.get(\"\
+          benchmarks\", {})\n    perf_metrics = perf_data.get(\"metrics\", {})\n\n\
+          \    lines = []\n    lines.append(\":white_check_mark: *\" + model + \"\
+          * evaluation complete\")\n    lines.append(\"\")\n    lines.append(\"*Accuracy:*\"\
+          )\n    for bm_id in sorted(benchmarks.keys()):\n        metrics = benchmarks[bm_id].get(\"\
+          metrics\", {})\n        acc = metrics.get(\"overall_accuracy\", \"N/A\"\
+          )\n        state = benchmarks[bm_id].get(\"state\", \"unknown\")\n     \
+          \   icon = \":large_green_circle:\" if state == \"completed\" else \":red_circle:\"\
+          \n        lines.append(\"  \" + icon + \" \" + bm_id + \": \" + str(acc)\
+          \ + \"%\")\n\n    if perf_metrics:\n        lines.append(\"\")\n       \
+          \ lines.append(\"*Performance:*\")\n        out_tps = perf_metrics.get(\"\
+          output_tokens_per_second\")\n        if out_tps is not None:\n         \
+          \   lines.append(\"  Output: \" + str(round(float(out_tps), 2)) + \" tok/s\"\
+          )\n        prompt_tps = perf_metrics.get(\"prompt_tokens_per_second\")\n\
+          \        if prompt_tps is not None:\n            lines.append(\"  Prompt:\
+          \ \" + str(round(float(prompt_tps), 2)) + \" tok/s\")\n\n    msg = \"\\\
+          n\".join(lines)\n    print(\"Notification message:\")\n    print(msg)\n\n\
+          \    if slack_webhook_url:\n        resp = requests.post(\n            slack_webhook_url,\n\
+          \            json={\"text\": msg},\n            timeout=10,\n        )\n\
+          \        print(\"Slack response: \" + str(resp.status_code))\n    else:\n\
+          \        print(\"No Slack webhook URL provided. Skipping notification.\"\
+          )\n\n"
+        image: registry.redhat.io/ubi9/python-311:latest
+    exec-setup-and-verify:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - setup_and_verify
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'eval-hub-sdk[client]==1.0.5'\
+          \  &&  python3 -m pip install --quiet --no-warn-script-location 'kfp==2.17.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef setup_and_verify(\n    evalhub_url: str,\n    auth_token: str,\n\
+          \    namespace: str,\n    provider_name: str,\n) -> str:\n    \"\"\"Verify\
+          \ EvalHub connectivity and return the Korean MCQ provider ID.\"\"\"\n  \
+          \  from evalhub import SyncEvalHubClient\n\n    client = SyncEvalHubClient(\n\
+          \        base_url=evalhub_url,\n        auth_token=auth_token,\n       \
+          \ insecure=True,\n        tenant=namespace,\n    )\n\n    health = client.health()\n\
+          \    print(\"Health: \" + str(health))\n\n    providers = client.providers.list()\n\
+          \    print(\"Providers: \" + str(len(providers)))\n\n    for p in providers:\n\
+          \        print(\"  - \" + p.name + \" (\" + p.resource.id + \")\")\n   \
+          \     if p.name == provider_name:\n            print(\"Match: \" + provider_name\
+          \ + \" -> \" + p.resource.id)\n            return p.resource.id\n\n    #\
+          \ Partial match fallback\n    for p in providers:\n        if provider_name.lower()\
+          \ in p.name.lower():\n            print(\"Match (partial): \" + p.name +\
+          \ \" -> \" + p.resource.id)\n            return p.resource.id\n\n    raise\
+          \ RuntimeError(\"Provider not found: \" + provider_name)\n\n"
+        image: registry.redhat.io/ubi9/python-311:latest
+pipelineInfo:
+  description: 'Korean LLM evaluation: accuracy (5 benchmarks) + GuideLLM performance
+    + report + Slack notification'
+  name: korean-llm-eval-pipeline
+root:
+  dag:
+    tasks:
+      generate-reports:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-generate-reports
+        dependentTasks:
+        - run-accuracy-benchmarks
+        - run-performance-benchmark
+        inputs:
+          artifacts:
+            accuracy_results:
+              taskOutputArtifact:
+                outputArtifactKey: results
+                producerTask: run-accuracy-benchmarks
+            performance_results:
+              taskOutputArtifact:
+                outputArtifactKey: results
+                producerTask: run-performance-benchmark
+        taskInfo:
+          name: generate-reports
+      run-accuracy-benchmarks:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-run-accuracy-benchmarks
+        dependentTasks:
+        - setup-and-verify
+        inputs:
+          parameters:
+            auth_token:
+              componentInputParameter: auth_token
+            evalhub_url:
+              componentInputParameter: evalhub_url
+            experiment_name:
+              componentInputParameter: experiment_name
+            limit:
+              componentInputParameter: limit
+            model_api_key:
+              componentInputParameter: model_api_key
+            model_endpoint:
+              componentInputParameter: model_endpoint
+            model_name:
+              componentInputParameter: model_name
+            namespace:
+              componentInputParameter: namespace
+            provider_id:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: setup-and-verify
+        taskInfo:
+          name: run-accuracy-benchmarks
+      run-performance-benchmark:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-run-performance-benchmark
+        dependentTasks:
+        - setup-and-verify
+        inputs:
+          parameters:
+            auth_token:
+              componentInputParameter: auth_token
+            evalhub_url:
+              componentInputParameter: evalhub_url
+            experiment_name:
+              componentInputParameter: experiment_name
+            model_endpoint:
+              componentInputParameter: model_endpoint
+            model_name:
+              componentInputParameter: model_name
+            namespace:
+              componentInputParameter: namespace
+        taskInfo:
+          name: run-performance-benchmark
+      send-notification:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-send-notification
+        dependentTasks:
+        - generate-reports
+        - run-accuracy-benchmarks
+        - run-performance-benchmark
+        inputs:
+          artifacts:
+            accuracy_results:
+              taskOutputArtifact:
+                outputArtifactKey: results
+                producerTask: run-accuracy-benchmarks
+            performance_results:
+              taskOutputArtifact:
+                outputArtifactKey: results
+                producerTask: run-performance-benchmark
+          parameters:
+            slack_webhook_url:
+              componentInputParameter: slack_webhook_url
+        taskInfo:
+          name: send-notification
+      setup-and-verify:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-setup-and-verify
+        inputs:
+          parameters:
+            auth_token:
+              componentInputParameter: auth_token
+            evalhub_url:
+              componentInputParameter: evalhub_url
+            namespace:
+              componentInputParameter: namespace
+            provider_name:
+              componentInputParameter: provider_name
+        taskInfo:
+          name: setup-and-verify
+  inputDefinitions:
+    parameters:
+      auth_token:
+        description: OpenShift auth token (oc whoami -t)
+        parameterType: STRING
+      evalhub_url:
+        description: EvalHub API base URL
+        parameterType: STRING
+      experiment_name:
+        defaultValue: pipeline-eval
+        description: MLflow experiment name for this run
+        isOptional: true
+        parameterType: STRING
+      limit:
+        defaultValue: 10000.0
+        description: Max samples per benchmark (0 = all)
+        isOptional: true
+        parameterType: NUMBER_INTEGER
+      model_api_key:
+        defaultValue: ''
+        description: K8s Secret name containing model API key (e.g. "model-api-key")
+        isOptional: true
+        parameterType: STRING
+      model_endpoint:
+        description: Model inference endpoint URL
+        parameterType: STRING
+      model_name:
+        defaultValue: glm-53-flash
+        description: Display name for the model
+        isOptional: true
+        parameterType: STRING
+      namespace:
+        defaultValue: demo
+        description: OpenShift namespace (X-Tenant for EvalHub API)
+        isOptional: true
+        parameterType: STRING
+      provider_name:
+        defaultValue: Korean MCQ Evaluation
+        description: EvalHub provider name for Korean MCQ benchmarks
+        isOptional: true
+        parameterType: STRING
+      slack_webhook_url:
+        defaultValue: ''
+        description: Slack Incoming Webhook URL (optional)
+        isOptional: true
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.17.0
