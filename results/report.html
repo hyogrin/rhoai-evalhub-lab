@@ -105,7 +105,7 @@
 <body>
 <div class="container">
     <h1>Korean LLM Benchmark Report</h1>
-    <p class="subtitle">Generated: 2026-09-23 17:08:12 | Models: 5 | Tasks: 5</p>
+    <p class="subtitle">Generated: 2026-10-02 19:16:00 | Models: 6 | Tasks: 5</p>
     <div class="card">
         <h2>Overall Accuracy (%)</h2>
         <div class="summary-grid">
@@ -129,6 +129,10 @@
                 <div class="model-name">qwen36-27b</div>
                 <div class="score">58.8%</div>
             </div>
+            <div class="summary-item">
+                <div class="model-name">guardrail</div>
+                <div class="score">0.0%</div>
+            </div>
         </div>
     </div>
 
@@ -141,14 +145,180 @@
         <h2>Detailed Results</h2>
         <div style="overflow-x: auto;">
         <table>
-            <thead><tr><th>Task</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <thead><tr><th>Task</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
             <tbody>
-            <tr><td>click</td><td>68.30</td><td>73.88</td><td class="best">94.96</td><td>66.82</td><td>75.90</td></tr>
-            <tr><td>haerae</td><td>63.20</td><td>69.87</td><td class="best">77.01</td><td>57.14</td><td>16.00</td></tr>
-            <tr><td>kmmlu</td><td>52.24</td><td>57.51</td><td class="best">86.48</td><td>53.37</td><td>62.50</td></tr>
-            <tr><td>kmmlu_hard</td><td>29.48</td><td>33.80</td><td class="best">79.21</td><td>27.51</td><td>43.06</td></tr>
-            <tr><td>kobest_boolq</td><td>91.52</td><td>96.08</td><td class="best">97.77</td><td>93.23</td><td>96.65</td></tr>
-            <tr style="font-weight:700; background:#e9ecef;"><td>Overall</td><td>60.95</td><td>66.23</td><td class="best">87.09</td><td>59.61</td><td>58.82</td></tr>
+            <tr><td>click</td><td>68.30</td><td>73.88</td><td class="best">94.96</td><td>-</td><td>66.82</td><td>75.90</td></tr>
+            <tr><td>haerae</td><td>63.20</td><td>69.87</td><td class="best">77.01</td><td>-</td><td>57.14</td><td>16.00</td></tr>
+            <tr><td>kmmlu</td><td>52.24</td><td>57.51</td><td class="best">86.48</td><td>-</td><td>53.37</td><td>62.50</td></tr>
+            <tr><td>kmmlu_hard</td><td>29.48</td><td>33.80</td><td class="best">79.21</td><td>-</td><td>27.51</td><td>43.06</td></tr>
+            <tr><td>kobest_boolq</td><td>91.52</td><td>96.08</td><td class="best">97.77</td><td>-</td><td>93.23</td><td>96.65</td></tr>
+            <tr style="font-weight:700; background:#e9ecef;"><td>Overall</td><td>60.95</td><td>66.23</td><td class="best">87.09</td><td>0.00</td><td>59.61</td><td>58.82</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>CLIcK — Accuracy by Supercategory</h2>
+        <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Supercategory</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <tbody>
+            <tr><td>Culture</td><td>69.43</td><td>73.88</td><td class="best">93.89</td><td>-</td><td>65.72</td><td>74.78</td></tr>
+            <tr><td>Language</td><td>65.79</td><td>73.89</td><td class="best">97.88</td><td>-</td><td>69.27</td><td>78.38</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>CLIcK — Accuracy by Category</h2>
+        <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Category</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <tbody>
+            <tr><td>Economy</td><td>89.83</td><td>93.22</td><td class="best">94.83</td><td>-</td><td>81.36</td><td>91.53</td></tr>
+            <tr><td>Functional</td><td>70.71</td><td>85.71</td><td class="best">98.11</td><td>-</td><td>82.35</td><td>89.52</td></tr>
+            <tr><td>Geography</td><td>78.23</td><td>80.33</td><td class="best">98.21</td><td>-</td><td>71.20</td><td>77.78</td></tr>
+            <tr><td>Grammar</td><td>43.29</td><td>51.93</td><td class="best">97.20</td><td>-</td><td>44.74</td><td>56.90</td></tr>
+            <tr><td>History</td><td>44.64</td><td>49.29</td><td class="best">85.62</td><td>-</td><td>40.71</td><td>48.57</td></tr>
+            <tr><td>Law</td><td>58.45</td><td>64.84</td><td class="best">95.74</td><td>-</td><td>56.62</td><td>65.75</td></tr>
+            <tr><td>Politics</td><td>79.76</td><td>79.76</td><td class="best">93.75</td><td>-</td><td>77.38</td><td>85.71</td></tr>
+            <tr><td>Pop Culture</td><td>82.93</td><td>87.80</td><td class="best">100.00</td><td>-</td><td>78.05</td><td>87.80</td></tr>
+            <tr><td>Society</td><td>81.23</td><td>86.41</td><td class="best">96.59</td><td>-</td><td>80.58</td><td>89.97</td></tr>
+            <tr><td>Textual</td><td>82.91</td><td>88.19</td><td class="best">98.16</td><td>-</td><td>84.93</td><td>92.57</td></tr>
+            <tr><td>Tradition</td><td>78.38</td><td>82.88</td><td class="best">91.39</td><td>-</td><td>71.62</td><td>82.88</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>KMMLU — Accuracy by Supercategory</h2>
+        <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Supercategory</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <tbody>
+            <tr><td>HUMSS</td><td>67.58</td><td>72.73</td><td class="best">94.77</td><td>-</td><td>62.42</td><td>80.00</td></tr>
+            <tr><td>Other</td><td>51.64</td><td>56.90</td><td class="best">86.01</td><td>-</td><td>52.67</td><td>60.66</td></tr>
+            <tr><td>STEM</td><td>51.92</td><td>57.23</td><td class="best">86.68</td><td>-</td><td>54.12</td><td>65.27</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>KMMLU — Accuracy by Category</h2>
+        <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Category</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <tbody>
+            <tr><td>Accounting</td><td>61.00</td><td>67.00</td><td class="best">95.12</td><td>-</td><td>49.00</td><td>69.00</td></tr>
+            <tr><td>Agricultural Sciences</td><td>41.90</td><td>49.90</td><td class="best">81.44</td><td>-</td><td>42.80</td><td>51.70</td></tr>
+            <tr><td>Aviation Engineering and Maintenance</td><td>56.30</td><td>59.00</td><td class="best">91.06</td><td>-</td><td>54.20</td><td>68.20</td></tr>
+            <tr><td>Biology</td><td>46.20</td><td>48.60</td><td class="best">87.13</td><td>-</td><td>45.50</td><td>60.80</td></tr>
+            <tr><td>Chemical Engineering</td><td>57.00</td><td>60.30</td><td class="best">93.67</td><td>-</td><td>57.80</td><td>69.70</td></tr>
+            <tr><td>Chemistry</td><td>57.67</td><td>65.50</td><td class="best">96.16</td><td>-</td><td>66.83</td><td>77.33</td></tr>
+            <tr><td>Civil Engineering</td><td>45.40</td><td>55.20</td><td class="best">85.75</td><td>-</td><td>49.70</td><td>55.00</td></tr>
+            <tr><td>Computer Science</td><td>81.00</td><td>80.80</td><td class="best">95.50</td><td>-</td><td>79.00</td><td>87.50</td></tr>
+            <tr><td>Construction</td><td>41.00</td><td>49.60</td><td class="best">76.31</td><td>-</td><td>44.00</td><td>47.40</td></tr>
+            <tr><td>Criminal Law</td><td>44.00</td><td>47.50</td><td class="best">82.02</td><td>-</td><td>46.00</td><td>51.00</td></tr>
+            <tr><td>Ecology</td><td>54.20</td><td>60.90</td><td class="best">80.22</td><td>-</td><td>55.10</td><td>62.50</td></tr>
+            <tr><td>Economics</td><td>63.85</td><td>73.85</td><td class="best">93.69</td><td>-</td><td>66.92</td><td>83.08</td></tr>
+            <tr><td>Education</td><td>79.00</td><td>77.00</td><td class="best">95.74</td><td>-</td><td>70.00</td><td>87.00</td></tr>
+            <tr><td>Electrical Engineering</td><td>38.74</td><td>43.61</td><td class="best">74.58</td><td>-</td><td>41.03</td><td>45.06</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>HAE-RAE — Accuracy by Category</h2>
+        <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Category</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <tbody>
+            <tr><td>correct_definition_matching</td><td>78.54</td><td>85.29</td><td class="best">97.89</td><td>-</td><td>83.96</td><td>0.00</td></tr>
+            <tr><td>csat_geo</td><td>66.67</td><td>65.15</td><td class="best">100.00</td><td>-</td><td>16.67</td><td>22.22</td></tr>
+            <tr><td>csat_law</td><td>35.00</td><td class="best">52.03</td><td>21.20</td><td>-</td><td>38.98</td><td>26.00</td></tr>
+            <tr><td>csat_socio</td><td>37.74</td><td>49.49</td><td class="best">87.50</td><td>-</td><td>36.54</td><td>22.34</td></tr>
+            <tr><td>date_understanding</td><td>-</td><td class="best">56.49</td><td>21.88</td><td>-</td><td>45.83</td><td>0.00</td></tr>
+            <tr><td>general_knowledge</td><td>54.86</td><td>61.36</td><td class="best">90.85</td><td>-</td><td>49.71</td><td>23.91</td></tr>
+            <tr><td>history</td><td>89.19</td><td>83.42</td><td class="best">96.76</td><td>-</td><td>58.51</td><td>50.00</td></tr>
+            <tr><td>loan_words</td><td>77.27</td><td>73.49</td><td class="best">90.21</td><td>-</td><td>80.43</td><td>24.56</td></tr>
+            <tr><td>lyrics_denoising</td><td class="best">0.00</td><td class="best">0.00</td><td class="best">0.00</td><td>-</td><td class="best">0.00</td><td class="best">0.00</td></tr>
+            <tr><td>proverbs_denoising</td><td>-</td><td>-</td><td>0.00</td><td>-</td><td>-</td><td>-</td></tr>
+            <tr><td>rare_words</td><td>83.29</td><td>81.25</td><td class="best">87.61</td><td>-</td><td>76.49</td><td>66.67</td></tr>
+            <tr><td>reading_comprehension</td><td>72.00</td><td>81.83</td><td class="best">97.94</td><td>-</td><td>69.46</td><td>15.79</td></tr>
+            <tr><td>standard_nomenclature</td><td>75.21</td><td>75.33</td><td class="best">94.40</td><td>-</td><td>81.95</td><td>26.58</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>KMMLU-HARD — Accuracy by Supercategory</h2>
+        <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Supercategory</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <tbody>
+            <tr><td>Other</td><td>29.48</td><td>33.80</td><td class="best">79.21</td><td>-</td><td>27.51</td><td>43.06</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>KMMLU-HARD — Accuracy by Category</h2>
+        <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Category</th><th>exaone4-32b</th><th>gemma4-12b</th><th>glm-53-flash</th><th>guardrail</th><th>qwen3-14b</th><th>qwen36-27b</th></tr></thead>
+            <tbody>
+            <tr><td>accounting</td><td>36.96</td><td>54.35</td><td class="best">91.43</td><td>-</td><td>21.74</td><td>54.35</td></tr>
+            <tr><td>agricultural_sciences</td><td>19.00</td><td>31.00</td><td class="best">66.67</td><td>-</td><td>14.00</td><td>35.00</td></tr>
+            <tr><td>aviation_engineering_and_maintenance</td><td>35.00</td><td>31.00</td><td class="best">83.67</td><td>-</td><td>28.00</td><td>52.00</td></tr>
+            <tr><td>biology</td><td>30.00</td><td>27.00</td><td class="best">87.04</td><td>-</td><td>24.00</td><td>36.00</td></tr>
+            <tr><td>chemical_engineering</td><td>31.00</td><td>28.00</td><td class="best">90.43</td><td>-</td><td>24.00</td><td>50.00</td></tr>
+            <tr><td>chemistry</td><td>31.00</td><td>47.00</td><td class="best">95.29</td><td>-</td><td>39.00</td><td>64.00</td></tr>
+            <tr><td>civil_engineering</td><td>27.00</td><td>29.00</td><td class="best">78.05</td><td>-</td><td>34.00</td><td>41.00</td></tr>
+            <tr><td>computer_science</td><td>32.00</td><td>39.00</td><td class="best">83.95</td><td>-</td><td>38.00</td><td>51.00</td></tr>
+            <tr><td>construction</td><td>28.00</td><td>27.00</td><td class="best">67.07</td><td>-</td><td>27.00</td><td>26.00</td></tr>
+            <tr><td>criminal_law</td><td>23.00</td><td>34.00</td><td class="best">71.43</td><td>-</td><td>28.00</td><td>35.00</td></tr>
+            <tr><td>ecology</td><td>26.00</td><td>27.00</td><td class="best">66.67</td><td>-</td><td>22.00</td><td>35.00</td></tr>
+            <tr><td>economics</td><td>35.71</td><td>47.62</td><td class="best">81.82</td><td>-</td><td>38.10</td><td>64.29</td></tr>
+            <tr><td>education</td><td>52.17</td><td>43.48</td><td class="best">80.00</td><td>-</td><td>30.43</td><td>60.87</td></tr>
+            <tr><td>electrical_engineering</td><td>32.00</td><td>28.00</td><td class="best">75.00</td><td>-</td><td>19.00</td><td>33.00</td></tr>
+            <tr><td>electronics_engineering</td><td>32.00</td><td>41.00</td><td class="best">94.05</td><td>-</td><td>42.00</td><td>59.00</td></tr>
+            <tr><td>energy_management</td><td>33.00</td><td>36.00</td><td class="best">77.78</td><td>-</td><td>30.00</td><td>47.00</td></tr>
+            <tr><td>environmental_science</td><td>25.00</td><td>24.00</td><td class="best">77.11</td><td>-</td><td>31.00</td><td>30.00</td></tr>
+            <tr><td>fashion</td><td>25.00</td><td>27.00</td><td class="best">52.27</td><td>-</td><td>20.00</td><td>36.00</td></tr>
+            <tr><td>food_processing</td><td>18.00</td><td>26.00</td><td class="best">68.13</td><td>-</td><td>23.00</td><td>41.00</td></tr>
+            <tr><td>gas_technology_and_engineering</td><td>20.00</td><td>27.00</td><td class="best">77.38</td><td>-</td><td>24.00</td><td>41.00</td></tr>
+            <tr><td>geomatics</td><td>29.00</td><td>40.00</td><td class="best">81.01</td><td>-</td><td>25.00</td><td>30.00</td></tr>
+            <tr><td>health</td><td>43.48</td><td>47.83</td><td class="best">84.62</td><td>-</td><td>13.04</td><td>39.13</td></tr>
+            <tr><td>industrial_engineer</td><td>23.00</td><td>31.00</td><td class="best">66.27</td><td>-</td><td>14.00</td><td>34.00</td></tr>
+            <tr><td>information_technology</td><td>36.00</td><td>37.00</td><td class="best">91.57</td><td>-</td><td>37.00</td><td>50.00</td></tr>
+            <tr><td>interior_architecture_and_design</td><td>31.00</td><td>33.00</td><td class="best">78.31</td><td>-</td><td>26.00</td><td>46.00</td></tr>
+            <tr><td>korean_history</td><td>20.45</td><td>27.91</td><td class="best">81.25</td><td>-</td><td>18.18</td><td>25.00</td></tr>
+            <tr><td>law</td><td>32.00</td><td>40.00</td><td class="best">63.64</td><td>-</td><td>19.00</td><td>41.00</td></tr>
+            <tr><td>machine_design_and_manufacturing</td><td>31.00</td><td>34.00</td><td class="best">84.78</td><td>-</td><td>27.00</td><td>48.00</td></tr>
+            <tr><td>management</td><td>34.00</td><td>46.00</td><td class="best">85.51</td><td>-</td><td>34.00</td><td>56.00</td></tr>
+            <tr><td>maritime_engineering</td><td>24.00</td><td>25.00</td><td class="best">87.50</td><td>-</td><td>29.00</td><td>46.00</td></tr>
+            <tr><td>marketing</td><td>42.00</td><td>47.00</td><td class="best">70.65</td><td>-</td><td>38.00</td><td>53.00</td></tr>
+            <tr><td>materials_engineering</td><td>35.00</td><td>33.00</td><td class="best">91.78</td><td>-</td><td>26.00</td><td>56.00</td></tr>
+            <tr><td>math</td><td>29.00</td><td>25.00</td><td class="best">98.81</td><td>-</td><td>21.00</td><td>35.00</td></tr>
+            <tr><td>mechanical_engineering</td><td>29.00</td><td>29.00</td><td class="best">85.42</td><td>-</td><td>34.00</td><td>43.00</td></tr>
+            <tr><td>nondestructive_testing</td><td>37.00</td><td>31.00</td><td class="best">72.22</td><td>-</td><td>27.00</td><td>47.00</td></tr>
+            <tr><td>patent</td><td>19.61</td><td>45.10</td><td class="best">50.00</td><td>-</td><td>33.33</td><td>41.18</td></tr>
+            <tr><td>political_science_and_sociology</td><td>31.11</td><td>36.67</td><td class="best">85.00</td><td>-</td><td>23.33</td><td>48.89</td></tr>
+            <tr><td>psychology</td><td>29.00</td><td>34.00</td><td class="best">77.78</td><td>-</td><td>32.00</td><td>44.00</td></tr>
+            <tr><td>public_safety</td><td>23.00</td><td>25.00</td><td class="best">72.06</td><td>-</td><td>21.00</td><td>33.00</td></tr>
+            <tr><td>railway_and_automotive_engineering</td><td>21.00</td><td>26.00</td><td class="best">83.53</td><td>-</td><td>30.00</td><td>30.00</td></tr>
+            <tr><td>real_estate</td><td>35.96</td><td>41.57</td><td class="best">63.27</td><td>-</td><td>24.72</td><td>32.58</td></tr>
+            <tr><td>refrigerating_machinery</td><td>34.00</td><td>36.00</td><td class="best">89.25</td><td>-</td><td>26.00</td><td>44.00</td></tr>
+            <tr><td>social_welfare</td><td>33.00</td><td>47.00</td><td class="best">82.29</td><td>-</td><td>38.00</td><td>56.00</td></tr>
+            <tr><td>taxation</td><td>25.00</td><td>26.04</td><td class="best">51.43</td><td>-</td><td>22.92</td><td>27.08</td></tr>
+            <tr><td>telecommunications_and_wireless_technology</td><td>34.00</td><td>43.00</td><td class="best">77.08</td><td>-</td><td>32.00</td><td>57.00</td></tr>
             </tbody>
         </table>
         </div>
@@ -159,7 +329,7 @@
         type: 'bar',
         data: {
             labels: ["click", "haerae", "kmmlu", "kmmlu_hard", "kobest_boolq"],
-            datasets: [{ label: "exaone4-32b", data: [68.3, 63.2, 52.24, 29.48, 91.52], backgroundColor: "#4e79a780", borderColor: "#4e79a7", borderWidth: 1 }, { label: "gemma4-12b", data: [73.88, 69.87, 57.51, 33.8, 96.08], backgroundColor: "#f28e2b80", borderColor: "#f28e2b", borderWidth: 1 }, { label: "glm-53-flash", data: [94.96, 77.01, 86.48, 79.21, 97.77], backgroundColor: "#e1575980", borderColor: "#e15759", borderWidth: 1 }, { label: "qwen3-14b", data: [66.82, 57.14, 53.37, 27.51, 93.23], backgroundColor: "#76b7b280", borderColor: "#76b7b2", borderWidth: 1 }, { label: "qwen36-27b", data: [75.9, 16.0, 62.5, 43.06, 96.65], backgroundColor: "#59a14f80", borderColor: "#59a14f", borderWidth: 1 }]
+            datasets: [{ label: "exaone4-32b", data: [68.3, 63.2, 52.24, 29.48, 91.52], backgroundColor: "#4e79a780", borderColor: "#4e79a7", borderWidth: 1 }, { label: "gemma4-12b", data: [73.88, 69.87, 57.51, 33.8, 96.08], backgroundColor: "#f28e2b80", borderColor: "#f28e2b", borderWidth: 1 }, { label: "glm-53-flash", data: [94.96, 77.01, 86.48, 79.21, 97.77], backgroundColor: "#e1575980", borderColor: "#e15759", borderWidth: 1 }, { label: "guardrail", data: [null, null, null, null, null], backgroundColor: "#76b7b280", borderColor: "#76b7b2", borderWidth: 1 }, { label: "qwen3-14b", data: [66.82, 57.14, 53.37, 27.51, 93.23], backgroundColor: "#59a14f80", borderColor: "#59a14f", borderWidth: 1 }, { label: "qwen36-27b", data: [75.9, 16.0, 62.5, 43.06, 96.65], backgroundColor: "#edc94880", borderColor: "#edc948", borderWidth: 1 }]
         },
         options: {
             responsive: true,

@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guardrail-content-safety
+data:
+  config.yaml: |
+    models:
+      - type: main
+        engine: openai
+        model: ${MODEL_NAME}
+        api_key_env_var: OPENAI_API_KEY
+        parameters:
+          base_url: "${LLM_BASE_URL}"
+      - type: content_safety
+        engine: nim
+        model: ${CONTENT_SAFETY_MODEL}
+        parameters:
+          base_url: "${CONTENT_SAFETY_URL}/v1"
+    rails:
+      config:
+        content_safety:
+          reasoning:
+            enabled: false
+        regex_detection:
+          input:
+            patterns:
+              - "\\d{3}-\\d{2}-\\d{4}"
+              - "\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}"
+              - "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+              - "\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}"
+              - "\\b(password|hack|exploit|vulnerability|secret|api[_-]?key|token)\\b"
+              - "\\b(violence|illegal|harmful)\\b"
+              - "\\b(chatgpt|openai|claude|anthropic)\\b"
+            case_insensitive: true
+          output:
+            patterns:
+              - "\\d{3}-\\d{2}-\\d{4}"
+              - "\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}"
+              - "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+              - "\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}"
+              - "\\b(chatgpt|openai|claude|anthropic)\\b"
+              - "\\b(confidential|internal[_-]?only|do[_-]?not[_-]?share)\\b"
+            case_insensitive: true
+        sensitive_data_detection:
+          input:
+            entities:
+              - CREDIT_CARD
+              - US_SSN
+              - EMAIL_ADDRESS
+              - PHONE_NUMBER
+          output:
+            entities:
+              - CREDIT_CARD
+              - US_SSN
+      input:
+        flows:
+          - detect sensitive data on input
+          - regex check input
+          - content safety check input $model=content_safety
+      output:
+        streaming:
+          enabled: true
+        flows:
+          - detect sensitive data on output
+          - regex check output
+          - content safety check output $model=content_safety
+  prompts.yaml: |
+    prompts:
+      - task: content_safety_check_input $model=content_safety
+        content: |
+          Task: Check if there is unsafe content in the User message according to our safety policy.
+
+          <BEGIN UNSAFE CONTENT CATEGORIES>
+          S1: Violence.
+          S2: Sexual.
+          S3: Criminal Planning.
+          S4: Guns and Illegal Weapons.
+          S5: Regulated or Controlled Substances.
+          S6: Suicide and Self Harm.
+          S7: Sexual (Minors).
+          S8: Hate /Identity Hate.
+          S9: PII/Privacy.
+          S10: Harassment.
+          S11: Threat.
+          S12: Profanity.
+          S13: Needs Caution.
+          <END UNSAFE CONTENT CATEGORIES>
+
+          <BEGIN CONVERSATION>
+
+          User: {{ user_input }}
+
+          <END CONVERSATION>
+
+          Respond ONLY with a JSON object: {"User Safety": "safe"} or {"User Safety": "unsafe", "Safety Categories": "comma-separated list"}
+        output_parser: nemoguard_parse_prompt_safety
+        max_tokens: 100
+      - task: content_safety_check_output $model=content_safety
+        content: |
+          Task: Check if there is unsafe content in the Assistant response according to our safety policy.
+
+          <BEGIN UNSAFE CONTENT CATEGORIES>
+          S1: Violence.
+          S2: Sexual.
+          S3: Criminal Planning.
+          S4: Guns and Illegal Weapons.
+          S5: Regulated or Controlled Substances.
+          S6: Suicide and Self Harm.
+          S7: Sexual (Minors).
+          S8: Hate /Identity Hate.
+          S9: PII/Privacy.
+          S10: Harassment.
+          S11: Threat.
+          S12: Profanity.
+          S13: Needs Caution.
+          <END UNSAFE CONTENT CATEGORIES>
+
+          <BEGIN CONVERSATION>
+
+          User: {{ user_input }}
+          Assistant: {{ bot_response }}
+
+          <END CONVERSATION>
+
+          Respond ONLY with a JSON object: {"User Safety": "safe"} or {"User Safety": "unsafe", "Safety Categories": "comma-separated list"}
+        output_parser: nemoguard_parse_prompt_safety
+        max_tokens: 100
+  rails.co: |
+    # Built-in flows only -- no custom Colang needed.

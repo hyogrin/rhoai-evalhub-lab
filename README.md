@@ -1,6 +1,6 @@
 # RHOAI EvalHub Lab
 
-A hands-on workshop for running **Korean language evaluation benchmarks** on **Red Hat OpenShift AI 3.5** using the **EvalHub** service (GA in RHOAI 3.5). This lab guides you through evaluating LLMs — including external MaaS endpoints and cluster-deployed models — on datasets like KMMLU, CLIcK, KoBEST, and HAE-RAE with centralized **MLflow experiment tracking**.
+A hands-on workshop for running **Korean language evaluation benchmarks** and **AI safety guardrails evaluation** on **Red Hat OpenShift AI 3.5** using the **EvalHub** service (GA in RHOAI 3.5). This lab guides you through evaluating LLMs — including external MaaS endpoints and cluster-deployed models — on datasets like KMMLU, CLIcK, KoBEST, and HAE-RAE with centralized **MLflow experiment tracking**, automated **Data Science Pipelines**, and **NeMo Guardrails** content safety evaluation on Korean hate speech.
 
 ## Architecture
 
@@ -14,6 +14,11 @@ flowchart LR
     GuideLLM -->|load test| Model[Model Endpoint<br/>KServe / MaaS]
     MCQ -->|API call| Model
     MCQ -->|download| HF[HuggingFace Datasets]
+    User -->|kfp SDK| Pipeline[DS Pipeline Server]
+    Pipeline -->|orchestrate| EvalHub
+    User -->|REST| Guardrails[NeMo Guardrails]
+    Guardrails -->|content safety| SafetyModel[Nemotron Safety Guard]
+    Guardrails -->|main LLM| Model
 ```
 
 
@@ -24,6 +29,8 @@ flowchart LR
 - **GuideLLM (Phase 1):** Run inference performance benchmarks using [GuideLLM](https://github.com/neuralmagic/guidellm) through EvalHub to measure TTFT, ITL, throughput, and end-to-end latency.
 - **Korean MCQ (Phase 2):** Run individual Korean MCQ benchmarks (KMMLU, CLIcK, HAE-RAE, etc.) through the EvalHub SDK with MLflow tracking. Summarize and export results as Markdown/HTML reports.
 - **Unified Evaluation (Phase 3):** Run multi-benchmark evaluations and unified accuracy + performance (Korean MCQ + GuideLLM) experiments under a single MLflow experiment, with comparison tables and visualization.
+- **Pipeline (Phase 4):** Automate the entire evaluation workflow as a Kubeflow Pipeline (KFP v2) on OpenShift AI Data Science Pipelines — accuracy, performance, reporting, and Slack notification in a single run.
+- **Guardrails Evaluation (Phase 5):** Deploy and evaluate NeMo Guardrails with content safety models on Korean hate speech using the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) dataset.
 
 ## Model
 
@@ -31,7 +38,7 @@ This workshop supports two model deployment modes:
 
 
 | Mode                          | Description                                        | Config                                        |
-| --- | --- | --- |
+| ----------------------------- | -------------------------------------------------- | --------------------------------------------- |
 | **MaaS (Model-as-a-Service)** | External API endpoint (e.g., cloud-hosted model)   | `MODEL_ENDPOINT` + `MODEL_API_KEY` in `.env`  |
 | **KServe (Cluster-deployed)** | InferenceService on OpenShift AI with vLLM runtime | `MODEL_NAME` + `NAMESPACE` → auto-derived URL |
 
@@ -59,18 +66,41 @@ Evaluated models include **GLM-53-Flash** (MaaS), **Gemma 4 12B**, **Qwen3.6-27B
 
 - **3_eval_hub_unified_benchmark/1_unified_benchmark.ipynb**: Run multi-benchmark evaluations, sample size comparisons, and unified accuracy + performance (Korean MCQ + GuideLLM) experiments under a single MLflow experiment. Includes MLflow integration, comparison tables, and result export.
 
+### 4. Evaluation Pipeline (Phase 4)
+
+- **4_eval_pipeline/1_run_pipeline.ipynb**: Compile and submit the end-to-end evaluation pipeline to Data Science Pipelines (KFP v2). Runs 5 Korean benchmarks + GuideLLM throughput in a single pipeline run, generates HTML/Markdown reports, and sends Slack notifications.
+- **4_eval_pipeline/pipeline.py**: Pipeline definition — accuracy, performance, report generation, and notification steps.
+- **4_eval_pipeline/compile.py**: Compile the pipeline to `eval_pipeline.yaml` for submission.
+
+### 5. Guardrails Evaluation (Phase 5)
+
+- **5_eval_guardrail/1_guardrail_setup.ipynb**: (Admin) Deploy NeMo Guardrails with two configurations — `guardrail-regex-only` (regex patterns) and `guardrail-content-safety` (regex + Nemotron Safety Guard 8B). Demonstrates progressive content safety: regex alone fails on Korean hate speech, while the content safety model blocks it.
+- **5_eval_guardrail/2_guardrail_test.ipynb**: (User) Interactive testing of guardrail configurations. Send Korean text through both configs side-by-side to compare regex-only vs content-safety filtering behavior.
+- **5_eval_guardrail/3_evaluate_guardrail.ipynb**: (User) Run a systematic evaluation of the content safety guardrail on the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) Korean hate speech dataset. Computes precision, recall, F1, confusion matrix, per-category breakdown, and generates a self-contained HTML report with LLM-generated recommendations.
+
 ## Korean Benchmark Datasets
 
 
-| Dataset     | Description                                      | Categories                                      | Samples |
-| --- | --- | --- | --- |
-| **KMMLU**   | Korean Massive Multi-task Language Understanding | 45 subjects (STEM, HUMSS, Applied Science)      | 35,030  |
-| **CLIcK**   | Cultural and Linguistic Intelligence in Korean   | 11 categories (Culture + Language)              | 1,995   |
-| **KoBEST**  | Korean Balanced Evaluation of Significant Tasks  | WiC, CoPA, BoolQ, HellaSwag, SentiNeg           | 6,100+  |
-| **HAE-RAE** | Korean Language Proficiency Benchmark            | 6 categories (General Knowledge, History, etc.) | 1,538   |
+| Dataset                                                                     | Description                                      | Categories                                      | Samples |
+| --------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------- | ------- |
+| **[KMMLU](https://huggingface.co/datasets/HAERAE-HUB/KMMLU)**               | Korean Massive Multi-task Language Understanding | 45 subjects (STEM, HUMSS, Applied Science)      | 35,030  |
+| **[CLIcK](https://huggingface.co/datasets/EunsuKim/CLIcK)**                 | Cultural and Linguistic Intelligence in Korean   | 11 categories (Culture + Language)              | 1,995   |
+| **[KoBEST](https://huggingface.co/datasets/skt/kobest_v1)**                 | Korean Balanced Evaluation of Significant Tasks  | WiC, CoPA, BoolQ, HellaSwag, SentiNeg           | 6,100+  |
+| **[HAE-RAE](https://huggingface.co/datasets/HAERAE-HUB/HAE_RAE_BENCH_1.1)** | Korean Language Proficiency Benchmark            | 6 categories (General Knowledge, History, etc.) | 1,538   |
+
+
+## Reports
+
+
+| Report                                                                                                      | Description                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [Korean LLM Benchmark Report](./results/report.html)                                                        | Multi-model accuracy comparison across 5 Korean benchmarks with interactive Chart.js visualizations                       |
+| [Guardrail Evaluation Report](./results/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) | Content safety evaluation on K-MHaS (2,000 samples) — confusion matrix, category breakdown, LLM-generated recommendations |
 
 
 ## Evaluation Results
+
+### Korean MCQ Benchmark Results
 
 We evaluated **GLM-53-Flash**, **Gemma 4 12B**, **Qwen3.6-27B-FP8**, **EXAONE 4.0 32B**, and **Qwen3-14B** on 5 Korean benchmarks using the custom `korean-mcq` EvalHub adapter with up to 10,000 samples per dataset. Evaluations were orchestrated via EvalHub SDK, with results tracked in MLflow.
 
@@ -79,30 +109,70 @@ We evaluated **GLM-53-Flash**, **Gemma 4 12B**, **Qwen3.6-27B-FP8**, **EXAONE 4.
 ![evaluation result on MLflow](./images/eval-result-mlflow.png)
 
 
-| Benchmark | GLM-53-Flash | Gemma4-12B | Qwen3.6-27B | EXAONE4-32B | Qwen3-14B | Samples |
-|:---|---:|---:|---:|---:|---:|---:|
-| CLIcK | **94.96%** | 73.88% | 75.90% | 68.30% | 66.82% | 1,995 |
-| HAE-RAE Bench 1.1 | **77.01%** | 69.87% | 60.43% | 63.20% | 54.64% | 1,538 |
-| KMMLU (0-shot) | **86.48%** | 57.51% | 62.50% | 52.24% | 48.30% | 10,000 |
-| KMMLU-HARD (0-shot) | **79.21%** | 33.80% | 43.06% | 29.48% | 27.95% | 10,000 |
-| KoBEST BoolQ | **97.77%** | 96.08% | 96.65% | 91.52% | 93.23% | 1,404 |
+| Benchmark           | GLM-53-Flash | Gemma4-12B | Qwen3.6-27B | EXAONE4-32B | Qwen3-14B | Samples |
+| ------------------- | ------------ | ---------- | ----------- | ----------- | --------- | ------- |
+| CLIcK               | **94.96%**   | 73.88%     | 75.90%      | 68.30%      | 66.82%    | 1,995   |
+| HAE-RAE Bench 1.1   | **77.01%**   | 69.87%     | 60.43%      | 63.20%      | 54.64%    | 1,538   |
+| KMMLU (0-shot)      | **86.48%**   | 57.51%     | 62.50%      | 52.24%      | 48.30%    | 10,000  |
+| KMMLU-HARD (0-shot) | **79.21%**   | 33.80%     | 43.06%      | 29.48%      | 27.95%    | 10,000  |
+| KoBEST BoolQ        | **97.77%**   | 96.08%     | 96.65%      | 91.52%      | 93.23%    | 1,404   |
 
 
 ### Performance (GuideLLM Throughput)
 
 
 | Metric            | GLM-53-Flash | EXAONE4-32B | Gemma4-12B | Qwen3-14B | Qwen3.6-27B |
-| --- | --- | --- | --- | --- | --- |
+| ----------------- | ------------ | ----------- | ---------- | --------- | ----------- |
 | Output tokens/sec | 32.54        | 47.74       | 22.86      | 26.65     | 11.40       |
 | Prompt tokens/sec | 74.84        | 107.43      | 51.19      | 52.05     | 25.41       |
 | Requests/sec      | 1.00         | 0.74        | 0.36       | 0.19      | 0.18        |
 
 
-Accumulated benchmark results across major open-weight models are maintained at:
+> 📄 **Full report:** [Korean LLM Benchmark Report](./results/report.html) — interactive Chart.js visualizations with per-category accuracy comparisons across all models.
 
-> **[evaluate-llm-on-korean-dataset](https://github.com/hyogrin/evaluate-llm-on-korean-dataset)**
+### Guardrail Content Safety Evaluation Results
 
-This companion repository tracks performance of models like Gemma, Llama, Phi, Qwen, and others on Korean evaluation datasets with detailed per-category breakdowns and radar chart visualizations.
+We evaluated the **NeMo Guardrails + Llama 3.1 Nemotron Safety Guard 8B** content safety pipeline on Korean hate speech detection using the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) (Korean Multi-label Hate Speech) dataset from COLING 2022. The evaluation used **2,000 samples** from the validation split with binary classification (Hate Speech vs Not Hate Speech).
+
+**Setup:**
+
+- **Safety Model:** [Llama 3.1 Nemotron Safety Guard 8B](https://huggingface.co/nvidia/llama-3.1-nemoguard-8b-content-safety) — deployed via KServe (vLLM runtime, 1× GPU)
+- **Guardrail Config:** `guardrail-content-safety` — regex patterns + content safety model with S1–S13 unsafe content categories
+- **Platform:** NeMo Guardrails Orchestrator on OpenShift AI
+- **Dataset:** K-MHaS — 109,692 utterances total, 8 hate categories (Age, Gender, Race, Religion, Disability, Profanity, Sexual, Not Hate Speech)
+
+**Overall Metrics (2,000 samples):**
+
+
+| Metric              | Value                                     |
+| ------------------- | ----------------------------------------- |
+| Precision           | 0.721                                     |
+| Recall              | 0.776                                     |
+| F1-Score            | 0.748                                     |
+| Accuracy            | 0.772                                     |
+| False Positive Rate | 0.231 (safe messages incorrectly blocked) |
+| False Negative Rate | 0.224 (hate speech missed)                |
+
+
+**Confusion Matrix:**
+
+
+|                             | Predicted: Allowed | Predicted: Blocked |
+| --------------------------- | ------------------ | ------------------ |
+| **Actual: Not Hate Speech** | TN = 776           | FP = 234           |
+| **Actual: Hate Speech**     | FN = 195           | TP = 679           |
+
+
+![Guardrail Confusion Matrix](./results/guardrail/guardrail_eval_guardrail-content-safety_cm.png)
+
+**Key Findings:**
+
+- The content safety model achieves **77.2% accuracy** on Korean hate speech detection — a meaningful baseline for multilingual safety.
+- **FPR of 23.1%** indicates over-blocking: ~1 in 4 safe Korean messages is incorrectly filtered. This is a known challenge with safety models optimized for English.
+- **FNR of 22.4%** means ~1 in 5 hate speech samples passes through undetected, particularly in categories with implicit or culturally-specific expressions.
+- Regex-only configuration (`guardrail-regex-only`) **cannot detect Korean hate speech at all** — it only matches English patterns and structured data (SSN, credit cards, etc.). The content safety model is essential for multilingual coverage.
+
+> 📄 **Full report:** [guardrail_eval_guardrail-content-safety_2000_report.html](./results/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) — includes per-category breakdown and LLM-generated recommendations.
 
 ## Prerequisites
 
@@ -133,6 +203,10 @@ This companion repository tracks performance of models like Gemma, Llama, Phi, Q
   - `2_eval_hub_kmcq_benchmark/1_kmcq_benchmark.ipynb` — Single Korean MCQ benchmark evaluation
   - `2_eval_hub_kmcq_benchmark/2_summarize_results.ipynb` — Analyze results and generate Markdown/HTML reports
   - `3_eval_hub_unified_benchmark/1_unified_benchmark.ipynb` — Multi-benchmark + unified accuracy/performance evaluation
+  - `4_eval_pipeline/1_run_pipeline.ipynb` — Automated pipeline evaluation (requires DS Pipelines)
+  - `5_eval_guardrail/1_guardrail_setup.ipynb` — Deploy NeMo Guardrails with content safety model
+  - `5_eval_guardrail/2_guardrail_test.ipynb` — Test guardrail configurations interactively
+  - `5_eval_guardrail/3_evaluate_guardrail.ipynb` — Evaluate guardrails on K-MHaS Korean hate speech dataset
 
 ### Option B: Workshop Participant (shared cluster)
 
@@ -153,162 +227,13 @@ No cluster setup required — the cluster owner provides you with the connection
 ## Phase Comparison
 
 
-|                         | Phase 1: GuideLLM              | Phase 2: Korean MCQ         | Phase 3: Unified                   |
-| --- | --- | --- | --- |
-| **Approach**            | GuideLLM via EvalHub SDK       | Single Korean MCQ benchmark | Multi-benchmark + GuideLLM unified |
-| **What it measures**    | TTFT, ITL, throughput, latency | Accuracy per benchmark      | Accuracy + performance combined    |
-| **Scope**               | Performance only               | One benchmark at a time     | All benchmarks + performance       |
-| **Experiment Tracking** | Built-in MLflow                | Built-in MLflow             | Unified MLflow experiment          |
-| **Best For**            | Capacity planning              | Quick single-task eval      | Production comprehensive eval      |
-
-
-## Detailed Evaluation Results
-
-### CLIcK — Accuracy by supercategory
-
-
-| supercategory | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| Culture | 93.89 | 73.80 | 74.78 | 69.43 | 65.65 |
-| Language | 97.88 | 73.56 | 78.38 | 65.79 | 69.44 |
-
-
-### CLIcK — Accuracy by category
-
-
-| category | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| Economy | 94.83 | 91.53 | 91.53 | 89.83 | 81.36 |
-| Functional | 98.11 | 85.71 | 89.52 | 70.71 | 82.35 |
-| Geography | 98.21 | 80.33 | 77.78 | 78.23 | 71.20 |
-| Grammar | 97.20 | 51.07 | 56.90 | 43.29 | 45.18 |
-| History | 85.62 | 49.29 | 48.57 | 44.64 | 40.71 |
-| Law | 95.74 | 64.84 | 65.75 | 58.45 | 56.16 |
-| Politics | 93.75 | 79.76 | 85.71 | 79.76 | 77.38 |
-| Pop Culture | 100.00 | 87.80 | 87.80 | 82.93 | 78.05 |
-| Society | 96.59 | 86.41 | 89.97 | 81.23 | 80.91 |
-| Textual | 98.16 | 88.19 | 92.57 | 82.91 | 84.93 |
-| Tradition | 91.39 | 82.88 | 82.88 | 78.38 | 71.17 |
-
-
-### HAE-RAE — Accuracy by category
-
-
-| category | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| correct_definition_matching | 97.89 | 85.29 | 86.33 | 78.54 | 83.96 |
-| csat_geo | 100.00 | 65.15 | 65.33 | 66.67 | 16.67 |
-| csat_law | - | 52.70 | 49.07 | 35.00 | 40.68 |
-| csat_socio | 87.50 | 49.23 | 46.64 | 37.74 | 36.00 |
-| date_understanding | 21.88 | 56.06 | 51.37 | - | - |
-| general_knowledge | 90.85 | 60.23 | 58.52 | 54.86 | 50.29 |
-| history | 96.76 | 83.96 | 81.91 | 89.19 | 58.51 |
-| loan_words | 90.21 | 72.89 | 67.46 | 77.27 | 92.00 |
-| lyrics_denoising | 0.00 | 0.00 | 0.00 | 0.00 | - |
-| rare_words | 87.61 | 81.56 | 81.73 | 83.29 | - |
-| reading_comprehension | 97.94 | 81.51 | 84.08 | 72.00 | - |
-| standard_nomenclature | 94.40 | 75.33 | 79.08 | 75.21 | - |
-
-
-### KMMLU — Accuracy by supercategory
-
-
-| supercategory | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| HUMSS | 94.77 | 72.73 | 80.00 | 67.58 | 50.00 |
-| STEM | 86.68 | 57.46 | 65.27 | 51.92 | - |
-| Other | 86.01 | 57.00 | 60.66 | 51.64 | 48.21 |
-
-
-### KMMLU — Accuracy by category (partial)
-
-
-| category | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| Accounting | 95.12 | 67.00 | 69.00 | 61.00 | 50.00 |
-| Agricultural Sciences | 81.44 | 49.90 | 51.70 | 41.90 | 42.70 |
-| Aviation Engineering and Maintenance | 91.06 | 58.80 | 68.20 | 56.30 | 54.33 |
-| Biology | 87.13 | 48.80 | 60.80 | 46.20 | - |
-| Chemical Engineering | 93.67 | 60.20 | 69.70 | 57.00 | - |
-| Chemistry | 96.16 | 65.50 | 77.33 | 57.67 | - |
-| Civil Engineering | 85.75 | 55.60 | 55.00 | 45.40 | - |
-| Computer Science | 95.50 | 80.90 | 87.50 | 81.00 | - |
-| Construction | 76.31 | 49.80 | 47.40 | 41.00 | - |
-| Criminal Law | 82.02 | 48.00 | 51.00 | 44.00 | - |
-| Ecology | 80.22 | 61.30 | 62.50 | 54.20 | - |
-| Economics | 93.69 | 73.85 | 83.08 | 63.85 | - |
-| Education | 95.74 | 77.00 | 87.00 | 79.00 | - |
-| Electrical Engineering | 74.58 | 43.84 | 45.06 | 38.74 | - |
-
-
-### KMMLU-HARD — Accuracy by supercategory
-
-
-| supercategory | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| Other | 79.21 | 33.83 | 43.06 | 29.48 | 27.95 |
-
-
-> EXAONE4-32B and later models evaluated with limit=10,000 (covers all 45 KMMLU-HARD categories).
-
-### KMMLU-HARD — Accuracy by category
-
-
-| category | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| accounting | 91.43 | 54.35 | 54.35 | 36.96 | 23.91 |
-| agricultural_sciences | 66.67 | 30.00 | 35.00 | 19.00 | - |
-| aviation_engineering | 83.67 | 31.00 | 52.00 | 35.00 | - |
-| biology | 87.04 | 27.00 | 36.00 | 30.00 | 23.00 |
-| chemical_engineering | 90.43 | 29.00 | 50.00 | 31.00 | - |
-| chemistry | 95.29 | 47.00 | 64.00 | 31.00 | 39.00 |
-| civil_engineering | 78.05 | 30.00 | 41.00 | 27.00 | - |
-| computer_science | 83.95 | 39.00 | 51.00 | 32.00 | 36.00 |
-| construction | 67.07 | 27.00 | 26.00 | 28.00 | - |
-| criminal_law | 71.43 | 34.00 | 35.00 | 23.00 | 28.00 |
-| ecology | 66.67 | 27.00 | 35.00 | 26.00 | 23.00 |
-| economics | 81.82 | 47.62 | 64.29 | 35.71 | - |
-| education | 80.00 | 43.48 | 60.87 | 52.17 | - |
-| electrical_engineering | 75.00 | 28.00 | 33.00 | 32.00 | 19.00 |
-| electronics_engineering | 94.05 | 43.00 | 59.00 | 32.00 | 43.00 |
-| energy_management | 77.78 | 36.00 | 47.00 | 33.00 | - |
-| environmental_science | 77.11 | 24.00 | 30.00 | 25.00 | - |
-| fashion | 52.27 | 27.00 | 36.00 | 25.00 | - |
-| food_processing | 68.13 | 26.00 | 41.00 | 18.00 | - |
-| gas_technology_and_engineering | 77.38 | 27.00 | 41.00 | 20.00 | 24.00 |
-| geomatics | 81.01 | 40.00 | 30.00 | 29.00 | 25.00 |
-| health | 84.62 | 47.83 | 39.13 | 43.48 | 13.04 |
-| industrial_engineer | 66.27 | 32.00 | 34.00 | 23.00 | - |
-| information_technology | 91.57 | 37.00 | 50.00 | 36.00 | 37.00 |
-| interior_architecture | 78.31 | 32.00 | 46.00 | 31.00 | - |
-| korean_history | 81.25 | 25.58 | 25.00 | 20.45 | 18.18 |
-| law | 63.64 | 40.00 | 41.00 | 32.00 | - |
-| machine_design_and_manufacturing | 84.78 | 33.00 | 48.00 | 31.00 | 26.09 |
-| management | 85.51 | 46.00 | 56.00 | 34.00 | 35.00 |
-| maritime_engineering | 87.50 | 25.00 | 46.00 | 24.00 | 29.00 |
-| marketing | 70.65 | 47.00 | 53.00 | 42.00 | - |
-| materials_engineering | 91.78 | 33.00 | 56.00 | 35.00 | 27.00 |
-| math | 98.81 | 25.00 | 35.00 | 29.00 | 20.00 |
-| mechanical_engineering | 85.42 | 29.00 | 43.00 | 29.00 | - |
-| nondestructive_testing | 72.22 | 31.00 | 47.00 | 37.00 | 27.00 |
-| patent | 50.00 | 45.10 | 41.18 | 19.61 | 35.29 |
-| political_science_and_sociology | 85.00 | 36.67 | 48.89 | 31.11 | 24.44 |
-| psychology | 77.78 | 34.00 | 44.00 | 29.00 | - |
-| public_safety | 72.06 | 25.00 | 33.00 | 23.00 | 21.00 |
-| railway_and_automotive_engineering | 83.53 | 26.00 | 30.00 | 21.00 | 29.00 |
-| real_estate | 63.27 | 42.70 | 32.58 | 35.96 | - |
-| refrigerating_machinery | 89.25 | 36.00 | 44.00 | 34.00 | - |
-| social_welfare | 82.29 | 47.00 | 56.00 | 33.00 | - |
-| taxation | 51.43 | 26.04 | 27.08 | 25.00 | - |
-| telecommunications | 77.08 | 42.00 | 57.00 | 34.00 | - |
-
-
-### KoBEST BoolQ
-
-
-| category | glm-53-flash | gemma4-12b | qwen36-27b | exaone4-32b | qwen3-14b |
-| --- | --- | --- | --- | --- | --- |
-| overall | 97.77 | 96.08 | 96.65 | 91.52 | 93.23 |
+|                         | Phase 1: GuideLLM              | Phase 2: Korean MCQ         | Phase 3: Unified                   | Phase 4: Pipeline               | Phase 5: Guardrails            |
+| ----------------------- | ------------------------------ | --------------------------- | ---------------------------------- | ------------------------------- | ------------------------------ |
+| **Approach**            | GuideLLM via EvalHub SDK       | Single Korean MCQ benchmark | Multi-benchmark + GuideLLM unified | KFP v2 pipeline on DS Pipelines | NeMo Guardrails + Safety Model |
+| **What it measures**    | TTFT, ITL, throughput, latency | Accuracy per benchmark      | Accuracy + performance combined    | End-to-end automated evaluation | Content safety filter accuracy |
+| **Scope**               | Performance only               | One benchmark at a time     | All benchmarks + performance       | All phases automated            | Korean hate speech detection   |
+| **Experiment Tracking** | Built-in MLflow                | Built-in MLflow             | Unified MLflow experiment          | Pipeline run + MLflow           | CSV + HTML report              |
+| **Best For**            | Capacity planning              | Quick single-task eval      | Production comprehensive eval      | CI/CD and scheduled evaluations | Safety compliance validation   |
 
 
 ## About
@@ -320,4 +245,11 @@ This workshop was built through real debugging and iteration on OpenShift AI. Ke
 - Both MaaS endpoints (external API) and KServe InferenceServices (cluster-internal) are supported
 - OAuth-protected InferenceServices require RBAC + SA token via `OPENAI_API_KEY` env var
 - SSL verification must be disabled for self-signed certs (`verify_certificate: "False"`)
+- NeMo Guardrails supports multi-config deployment — `config_id` must be nested inside the `guardrails` object in the request body
+- Reasoning models (e.g., GLM-53-Flash) consume `max_tokens` for internal thinking before generating content — set a sufficiently large `max_tokens` when using them for text generation
+
+## References
+
+- **[evaluate-llm-on-korean-dataset](https://github.com/hyogrin/evaluate-llm-on-korean-dataset)** — Accumulated Korean LLM benchmark results across major open-weight models (Gemma, Llama, Phi, Qwen, etc.) with per-category breakdowns and radar chart visualizations.
+- **[evaluate-contentfilter-on-korean-dataset](https://github.com/hyogrin/evaluate-contentfilter-on-korean-dataset)** — Reference implementation for evaluating content safety filters on the K-MHaS Korean hate speech dataset.
 

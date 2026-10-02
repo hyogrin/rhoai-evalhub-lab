@@ -124,6 +124,34 @@ def extract_scores(results_data: dict) -> dict:
     return scores
 
 
+def extract_category_scores(results_data: dict) -> dict:
+    """Extract category and supercategory accuracy from EvalHub format.
+
+    Returns {benchmark_id: {"categories": {cat: score}, "supercategories": {scat: score}}}.
+    """
+    breakdown = {}
+    if "benchmarks" not in results_data:
+        return breakdown
+
+    for bm in results_data["benchmarks"]:
+        task_id = bm.get("id", "unknown")
+        metrics = bm.get("metrics", {})
+        cats = {}
+        scats = {}
+        for key, val in metrics.items():
+            if key.startswith("category_accuracy.") and isinstance(val, (int, float)):
+                cat_name = key.replace("category_accuracy.", "")
+                if cat_name != "unknown":
+                    cats[cat_name] = round(float(val), 2)
+            elif key.startswith("supercategory_accuracy.") and isinstance(val, (int, float)):
+                scat_name = key.replace("supercategory_accuracy.", "")
+                scats[scat_name] = round(float(val), 2)
+        if cats or scats:
+            breakdown[task_id] = {"categories": cats, "supercategories": scats}
+
+    return breakdown
+
+
 def build_score_table(all_results: dict) -> tuple:
     """Build comparison data: (models list, {task: {model: score}})."""
     models = sorted(all_results.keys())
@@ -138,6 +166,34 @@ def build_score_table(all_results: dict) -> tuple:
                 table[task_key][model_name] = score
 
     return models, table
+
+
+def build_category_tables(all_results: dict) -> dict:
+    """Build per-task category breakdown: {task: {"categories"|"supercategories": {cat: {model: score}}}}."""
+    category_data = {}
+
+    for model_name, tasks in all_results.items():
+        for task_file, data in tasks.items():
+            breakdowns = extract_category_scores(data)
+            for task_id, bd in breakdowns.items():
+                if task_id not in category_data:
+                    category_data[task_id] = {"categories": {}, "supercategories": {}}
+
+                for cat, score in bd.get("categories", {}).items():
+                    if cat not in category_data[task_id]["categories"]:
+                        category_data[task_id]["categories"][cat] = {}
+                    existing = category_data[task_id]["categories"][cat].get(model_name)
+                    if existing is None or score > 0:
+                        category_data[task_id]["categories"][cat][model_name] = score
+
+                for scat, score in bd.get("supercategories", {}).items():
+                    if scat not in category_data[task_id]["supercategories"]:
+                        category_data[task_id]["supercategories"][scat] = {}
+                    existing = category_data[task_id]["supercategories"][scat].get(model_name)
+                    if existing is None or score > 0:
+                        category_data[task_id]["supercategories"][scat][model_name] = score
+
+    return category_data
 
 
 def compute_overall(score_table: dict, models: list) -> dict:
@@ -340,6 +396,69 @@ def generate_html(all_results: dict, title: str, output_path: Path):
         html += '    </div>\n\n'
     else:
         html += '    <div class="card"><p class="no-data">No evaluation results found. Run Phase 1 or Phase 2 evaluations first.</p></div>\n'
+
+    # Per-task category breakdown tables
+    category_data = build_category_tables(all_results)
+    TASK_DISPLAY = {
+        "click": "CLIcK",
+        "kmmlu": "KMMLU",
+        "kmmlu_hard": "KMMLU-HARD",
+        "haerae": "HAE-RAE",
+        "kobest_boolq": "KoBEST BoolQ",
+    }
+    for task_id in ["click", "kmmlu", "haerae", "kmmlu_hard", "kobest_boolq"]:
+        if task_id not in category_data:
+            continue
+        td = category_data[task_id]
+        display_name = TASK_DISPLAY.get(task_id, task_id)
+
+        # Supercategory table
+        if td["supercategories"]:
+            html += f'    <div class="card">\n'
+            html += f'        <h2>{display_name} — Accuracy by Supercategory</h2>\n'
+            html += '        <div style="overflow-x: auto;">\n'
+            html += '        <table>\n'
+            html += '            <thead><tr><th>Supercategory</th>'
+            for m in models:
+                html += f'<th>{m}</th>'
+            html += '</tr></thead>\n            <tbody>\n'
+            for scat in sorted(td["supercategories"].keys()):
+                html += f'            <tr><td>{scat}</td>'
+                scat_scores = td["supercategories"][scat]
+                max_s = max(scat_scores.values()) if scat_scores else 0
+                for m in models:
+                    s = scat_scores.get(m)
+                    if s is not None:
+                        css = ' class="best"' if s == max_s and len(scat_scores) > 1 else ''
+                        html += f'<td{css}>{s:.2f}</td>'
+                    else:
+                        html += '<td>-</td>'
+                html += '</tr>\n'
+            html += '            </tbody>\n        </table>\n        </div>\n    </div>\n\n'
+
+        # Category table
+        if td["categories"]:
+            html += f'    <div class="card">\n'
+            html += f'        <h2>{display_name} — Accuracy by Category</h2>\n'
+            html += '        <div style="overflow-x: auto;">\n'
+            html += '        <table>\n'
+            html += '            <thead><tr><th>Category</th>'
+            for m in models:
+                html += f'<th>{m}</th>'
+            html += '</tr></thead>\n            <tbody>\n'
+            for cat in sorted(td["categories"].keys()):
+                html += f'            <tr><td>{cat}</td>'
+                cat_scores = td["categories"][cat]
+                max_c = max(cat_scores.values()) if cat_scores else 0
+                for m in models:
+                    s = cat_scores.get(m)
+                    if s is not None:
+                        css = ' class="best"' if s == max_c and len(cat_scores) > 1 else ''
+                        html += f'<td{css}>{s:.2f}</td>'
+                    else:
+                        html += '<td>-</td>'
+                html += '</tr>\n'
+            html += '            </tbody>\n        </table>\n        </div>\n    </div>\n\n'
 
     # Chart.js script
     if models and tasks_sorted:
