@@ -1,0 +1,11 @@
+prompts:
+  - task: content_safety_check_input $model=kanana_safety
+    content: |
+      <human>{{ user_input }}</human><ai></ai>
+    output_parser: kanana_parse_safety
+    max_tokens: 16
+  - task: content_safety_check_output $model=kanana_safety
+    content: |
+      <human>{{ user_input }}</human><ai>{{ bot_response }}</ai>
+    output_parser: kanana_parse_safety
+    max_tokens: 16

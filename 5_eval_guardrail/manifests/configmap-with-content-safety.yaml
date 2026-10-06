@@ -15,7 +15,7 @@ data:
         engine: nim
         model: ${CONTENT_SAFETY_MODEL}
         parameters:
-          base_url: "${CONTENT_SAFETY_URL}/v1"
+          base_url: "${CONTENT_SAFETY_ENDPOINT}/v1"
     rails:
       config:
         content_safety:

@@ -1,0 +1,26 @@
+models:
+  - type: main
+    engine: openai
+    model: glm-53-flash
+    api_key_env_var: OPENAI_API_KEY
+    parameters:
+      base_url: "https://maas.apps.ocp.cloud.rhai-tmm.dev/prelude-maas/glm-53-flash/v1"
+  - type: kanana_safety
+    engine: openai
+    model: kanana-safeguard-8b
+    api_key_env_var: KANANA_API_KEY
+    parameters:
+      base_url: "https://kanana-safeguard-8b-kserve-workload-svc.demo.svc.cluster.local:8000/v1"
+rails:
+  config:
+    content_safety:
+      reasoning:
+        enabled: false
+  input:
+    flows:
+      - content safety check input $model=kanana_safety
+  output:
+    streaming:
+      enabled: true
+    flows:
+      - content safety check output $model=kanana_safety
