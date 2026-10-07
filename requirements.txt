@@ -2,9 +2,17 @@
 # Install: pip install -q -r requirements.txt
 
 python-dotenv
-eval-hub-sdk>=0.1.6
+eval-hub-sdk>=0.4.0
 mlflow==3.13.0
 pandas
 tabulate
 httpx>=0.27
 PyYAML
+jupyter
+ipykernel
+kfp>=2.14.3
+datasets
+scikit-learn
+matplotlib
+seaborn
+tqdm
