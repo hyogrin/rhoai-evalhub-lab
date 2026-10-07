@@ -1,6 +1,6 @@
 # RHOAI EvalHub Lab
 
-A hands-on workshop for running **Korean language evaluation benchmarks** and **AI safety guardrails evaluation** on **Red Hat OpenShift AI 3.5** using the **EvalHub** service (GA in RHOAI 3.5). This lab guides you through evaluating LLMs — including external MaaS endpoints and cluster-deployed models — on datasets like KMMLU, CLIcK, KoBEST, and HAE-RAE with centralized **MLflow experiment tracking**, automated **Data Science Pipelines**, and **NeMo Guardrails** content safety evaluation on Korean hate speech.
+A hands-on workshop for running **Korean language evaluation benchmarks** and **AI safety guardrails evaluation** on **Red Hat OpenShift AI 3.5** using the **EvalHub** service (GA in RHOAI 3.5). This lab guides you through evaluating LLMs — including external MaaS endpoints and cluster-deployed models — on datasets like KMMLU, CLIcK, KoBEST, and HAE-RAE with centralized **MLflow experiment tracking**, automated **Data Science Pipelines**, and content safety evaluation using **NeMo Guardrails** and **Kanana Safeguard** on Korean hate speech.
 
 ## Architecture
 
@@ -19,6 +19,8 @@ flowchart LR
     User -->|REST| Guardrails[NeMo Guardrails]
     Guardrails -->|content safety| SafetyModel[Nemotron Safety Guard]
     Guardrails -->|main LLM| Model
+    User -->|REST| Kanana[Kanana Safeguard 8B]
+    Kanana -->|content safety| Model
 ```
 
 
@@ -30,7 +32,7 @@ flowchart LR
 - **Korean MCQ (Phase 2):** Run individual Korean MCQ benchmarks (KMMLU, CLIcK, HAE-RAE, etc.) through the EvalHub SDK with MLflow tracking. Summarize and export results as Markdown/HTML reports.
 - **Unified Evaluation (Phase 3):** Run multi-benchmark evaluations and unified accuracy + performance (Korean MCQ + GuideLLM) experiments under a single MLflow experiment, with comparison tables and visualization.
 - **Pipeline (Phase 4):** Automate the entire evaluation workflow as a Kubeflow Pipeline (KFP v2) on OpenShift AI Data Science Pipelines — accuracy, performance, reporting, and Slack notification in a single run.
-- **Guardrails Evaluation (Phase 5):** Deploy and evaluate NeMo Guardrails with content safety models on Korean hate speech using the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) dataset.
+- **Guardrails Evaluation (Phase 5):** Deploy and evaluate content safety guardrails — NeMo Guardrails (Nemotron Safety Guard) and Kanana Safeguard 8B — on Korean hate speech using the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) dataset, with side-by-side model comparison.
 
 ## Model
 
@@ -76,7 +78,8 @@ Evaluated models include **GLM-53-Flash** (MaaS), **Gemma 4 12B**, **Qwen3.6-27B
 
 - **5_eval_guardrail/1_guardrail_setup.ipynb**: (Admin) Deploy NeMo Guardrails with two configurations — `guardrail-regex-only` (regex patterns) and `guardrail-content-safety` (regex + Nemotron Safety Guard 8B). Demonstrates progressive content safety: regex alone fails on Korean hate speech, while the content safety model blocks it.
 - **5_eval_guardrail/2_guardrail_test.ipynb**: (User) Interactive testing of guardrail configurations. Send Korean text through both configs side-by-side to compare regex-only vs content-safety filtering behavior.
-- **5_eval_guardrail/3_evaluate_guardrail.ipynb**: (User) Run a systematic evaluation of the content safety guardrail on the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) Korean hate speech dataset. Computes precision, recall, F1, confusion matrix, per-category breakdown, and generates a self-contained HTML report with LLM-generated recommendations.
+- **5_eval_guardrail/3_evaluate_guardrail_nemo.ipynb**: (User) Evaluate the NeMo Guardrails + Nemotron Safety Guard content safety pipeline on the K-MHaS Korean hate speech dataset. Computes precision, recall, F1, confusion matrix, per-category breakdown, and generates a self-contained HTML report with LLM-generated recommendations.
+- **5_eval_guardrail/3_evaluate_guardrail_kanana.ipynb**: (User) Evaluate Kanana Safeguard 8B on the same K-MHaS dataset. Same evaluation pipeline and metrics, enabling direct comparison with the NeMo Guardrails approach.
 
 ## Korean Benchmark Datasets
 
@@ -95,7 +98,8 @@ Evaluated models include **GLM-53-Flash** (MaaS), **Gemma 4 12B**, **Qwen3.6-27B
 | Report                                                                                                      | Description                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | [Korean LLM Benchmark Report](https://hyogrin.github.io/rhoai-evalhub-lab/report.html)                                                        | Multi-model accuracy comparison across 5 Korean benchmarks with interactive Chart.js visualizations and per-category breakdowns |
-| [Guardrail Evaluation Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) | Content safety evaluation on K-MHaS (2,000 samples) — confusion matrix, category breakdown, LLM-generated recommendations |
+| [NemoTron-Safety-Guard — Guardrail Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) | NeMo Guardrails content safety evaluation on K-MHaS (2,000 samples) — confusion matrix, category breakdown, LLM recommendations |
+| [Kanana-Safeguard-8B — Guardrail Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-kanana-safety_2000_report.html) | Kanana Safeguard content safety evaluation on K-MHaS (2,000 samples) — confusion matrix, category breakdown, LLM recommendations |
 
 
 ## Evaluation Results
@@ -132,47 +136,47 @@ We evaluated **GLM-53-Flash**, **Gemma 4 12B**, **Qwen3.6-27B-FP8**, **EXAONE 4.
 
 ### Guardrail Content Safety Evaluation Results
 
-We evaluated the **NeMo Guardrails + Llama 3.1 Nemotron Safety Guard 8B** content safety pipeline on Korean hate speech detection using the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) (Korean Multi-label Hate Speech) dataset from COLING 2022. The evaluation used **2,000 samples** from the validation split with binary classification (Hate Speech vs Not Hate Speech).
+Two content-safety guardrail models were evaluated on Korean hate speech detection using the [K-MHaS](https://huggingface.co/datasets/nayohan/K-MHaS) (Korean Multi-label Hate Speech) dataset from COLING 2022. Both evaluations used **2,000 samples** from the validation split with binary classification (Hate Speech vs Not Hate Speech).
 
 **Setup:**
 
-- **Safety Model:** [Llama 3.1 Nemotron Safety Guard 8B](https://huggingface.co/nvidia/llama-3.1-nemoguard-8b-content-safety) — deployed via KServe (vLLM runtime, 1× GPU)
-- **Guardrail Config:** `guardrail-content-safety` — regex patterns + content safety model with S1–S13 unsafe content categories
-- **Platform:** NeMo Guardrails Orchestrator on OpenShift AI
+- **NeMo Guardrails + [Llama 3.1 Nemotron Safety Guard 8B](https://huggingface.co/nvidia/llama-3.1-nemoguard-8b-content-safety)** — deployed via KServe (vLLM runtime, 1× GPU), `guardrail-content-safety` config with regex + S1–S13 unsafe content categories
+- **[Kanana Safeguard 8B](https://huggingface.co/kakaocorp/kanana-safeguard-8b)** — deployed via KServe (vLLM runtime, 1× GPU), standalone content safety model
 - **Dataset:** K-MHaS — 109,692 utterances total, 8 hate categories (Age, Gender, Race, Religion, Disability, Profanity, Sexual, Not Hate Speech)
 
-**Overall Metrics (2,000 samples):**
+**Model Comparison (2,000 samples):**
 
+| Metric | NemoTron Safety Guard | Kanana Safeguard 8B | Winner |
+| ------------------- | --------------------- | ------------------- | -------------- |
+| Precision | 0.721 | 0.714 | NemoTron (↑) |
+| Recall | 0.776 | **0.905** | Kanana (↑) |
+| F1-Score | 0.748 | **0.798** | Kanana (↑) |
+| Accuracy | 0.772 | **0.800** | Kanana (↑) |
+| False Positive Rate | 0.231 | 0.280 | NemoTron (↓) |
+| False Negative Rate | 0.224 | **0.095** | Kanana (↓) |
+| FP+FN (Classification Errors) | 456 | **399** | Kanana (↓) |
 
-| Metric              | Value                                     |
-| ------------------- | ----------------------------------------- |
-| Precision           | 0.721                                     |
-| Recall              | 0.776                                     |
-| F1-Score            | 0.748                                     |
-| Accuracy            | 0.772                                     |
-| False Positive Rate | 0.231 (safe messages incorrectly blocked) |
-| False Negative Rate | 0.224 (hate speech missed)                |
-
-
-**Confusion Matrix:**
-
+**Confusion Matrix — NemoTron Safety Guard:**
 
 |                             | Predicted: Allowed | Predicted: Blocked |
 | --------------------------- | ------------------ | ------------------ |
-| **Actual: Not Hate Speech** | TN = 776           | FP = 234           |
-| **Actual: Hate Speech**     | FN = 195           | TP = 679           |
+| **Actual: Not Hate Speech** | TN = 869           | FP = 261           |
+| **Actual: Hate Speech**     | FN = 195           | TP = 675           |
 
+**Confusion Matrix — Kanana Safeguard 8B:**
 
-![Guardrail Confusion Matrix](./results/guardrail/guardrail_eval_guardrail-content-safety_cm.png)
+|                             | Predicted: Allowed | Predicted: Blocked |
+| --------------------------- | ------------------ | ------------------ |
+| **Actual: Not Hate Speech** | TN = 814           | FP = 316           |
+| **Actual: Hate Speech**     | FN = 83            | TP = 787           |
 
 **Key Findings:**
 
-- The content safety model achieves **77.2% accuracy** on Korean hate speech detection — a meaningful baseline for multilingual safety.
-- **FPR of 23.1%** indicates over-blocking: ~1 in 4 safe Korean messages is incorrectly filtered. This is a known challenge with safety models optimized for English.
-- **FNR of 22.4%** means ~1 in 5 hate speech samples passes through undetected, particularly in categories with implicit or culturally-specific expressions.
-- Regex-only configuration (`guardrail-regex-only`) **cannot detect Korean hate speech at all** — it only matches English patterns and structured data (SSN, credit cards, etc.). The content safety model is essential for multilingual coverage.
+- **Kanana Safeguard 8B** achieves significantly higher recall (0.905 vs 0.776), meaning it catches far more hate speech — only 9.5% missed vs. 22.4% missed by NemoTron. It leads in F1, Accuracy, and total classification errors.
+- **NemoTron Safety Guard** has a lower false positive rate (23.1% vs 28.0%), making it less likely to block legitimate messages incorrectly. Better suited when minimizing over-blocking is the priority.
+- Regex-only configuration (`guardrail-regex-only`) **cannot detect Korean hate speech at all** — it only matches English patterns and structured data (SSN, credit cards, etc.). A content safety model is essential for multilingual coverage.
 
-> 📄 **Full report:** [Guardrail Evaluation Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) — includes per-category breakdown and LLM-generated recommendations.
+> 📄 **Full reports:** [NemoTron-Safety-Guard — Guardrail Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-content-safety_2000_report.html) · [Kanana-Safeguard-8B — Guardrail Report](https://hyogrin.github.io/rhoai-evalhub-lab/guardrail/guardrail_eval_guardrail-kanana-safety_2000_report.html) — includes per-category breakdown and LLM-generated recommendations.
 
 ## Prerequisites
 
@@ -206,7 +210,8 @@ We evaluated the **NeMo Guardrails + Llama 3.1 Nemotron Safety Guard 8B** conten
   - `4_eval_pipeline/1_run_pipeline.ipynb` — Automated pipeline evaluation (requires DS Pipelines)
   - `5_eval_guardrail/1_guardrail_setup.ipynb` — Deploy NeMo Guardrails with content safety model
   - `5_eval_guardrail/2_guardrail_test.ipynb` — Test guardrail configurations interactively
-  - `5_eval_guardrail/3_evaluate_guardrail.ipynb` — Evaluate guardrails on K-MHaS Korean hate speech dataset
+  - `5_eval_guardrail/3_evaluate_guardrail_nemo.ipynb` — Evaluate NeMo Guardrails on K-MHaS Korean hate speech dataset
+  - `5_eval_guardrail/3_evaluate_guardrail_kanana.ipynb` — Evaluate Kanana Safeguard on K-MHaS Korean hate speech dataset
 
 ### Option B: Workshop Participant (shared cluster)
 
