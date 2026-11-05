@@ -217,15 +217,20 @@ Two content-safety guardrail models were evaluated on Korean hate speech detecti
 
 No cluster setup required — the cluster owner provides you with the connection info.
 
-1. Clone this repo (Workbench, laptop, or any Jupyter environment):
+1. Clone this repo in your OpenShift AI Workbench terminal:
   ```bash
    git clone https://github.com/hyogrin/rhoai-evalhub-lab.git
    cd rhoai-evalhub-lab
   ```
-2. Open `**0_setup/2_eval_hub_setup.ipynb**` and run **Step 0**:
-  - Paste the values from the cluster owner: `NAMESPACE`, `MODEL_NAME`, `MODEL_ENDPOINT`, `MODEL_API_KEY`, `EVALHUB_URL`, `EVALHUB_AUTH_TOKEN`
-  - Run the cell — it creates `.env` and installs dependencies
-3. **Skip** `1_LMEval_setup` and Part A of `2_eval_hub_setup` — go directly to Phase 1-3 notebooks
+2. Create the workshop configuration and install dependencies from the repository root:
+  ```bash
+   cp -n workshop_sample.env .env
+   python -m pip install -q -r requirements.txt
+  ```
+  - Open `.env` in JupyterLab and fill in the seven connection variables using the values from your instructor.
+  - Follow [Workbench environment configuration](docs/workshop-environment.adoc) for each variable's purpose and how to obtain its value. This English AsciiDoc section can be copied into Module 2 of the workshop.
+3. Open `0_setup/1_eval_hub_setup.ipynb` and run **Step 0: Load Configuration**, then continue as directed by your instructor. This step reads the existing `.env`.
+4. Continue with the Phase 1-3 benchmark notebooks. The basic workshop does not require the pipeline notebook or pipeline, S3, and Slack environment settings. Add the separate Guardrails settings from the environment guide when proceeding to Module 6.
 
 > **Local development:** If you have [uv](https://docs.astral.sh/uv/) installed, you can use `uv sync` instead for a reproducible virtual environment.
 
