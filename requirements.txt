@@ -2,6 +2,8 @@
 # Install: pip install -q -r requirements.txt
 
 python-dotenv
+boto3
+filelock
 eval-hub-sdk>=0.4.0
 mlflow==3.13.0
 pandas

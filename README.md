@@ -80,6 +80,9 @@ Evaluated models include **GLM-53-Flash** (MaaS), **Gemma 4 12B**, **Qwen3.6-27B
 - **5_eval_guardrail/2_guardrail_test.ipynb**: (User) Interactive testing of guardrail configurations. Send Korean text through both configs side-by-side to compare regex-only vs content-safety filtering behavior.
 - **5_eval_guardrail/3_evaluate_guardrail_nemo.ipynb**: (User) Evaluate the NeMo Guardrails + Nemotron Safety Guard content safety pipeline on the K-MHaS Korean hate speech dataset. Computes precision, recall, F1, confusion matrix, per-category breakdown, and generates a self-contained HTML report with LLM-generated recommendations.
 - **5_eval_guardrail/3_evaluate_guardrail_kanana.ipynb**: (User) Evaluate Kanana Safeguard 8B on the same K-MHaS dataset. Same evaluation pipeline and metrics, enabling direct comparison with the NeMo Guardrails approach.
+- [4. Fine-tune Kanana with LoRA](5_eval_guardrail/4_finetune_guardrail_kanana_lora.ipynb) trains on K-MHaS, plots training and development loss, and exports the adapter and merged model. **Run All** runs the OpenShift AI pipeline. A CUDA workbench can also run the same steps locally.
+- [5. Compare base and fine-tuned Kanana](5_eval_guardrail/5_compare_guardrail_kanana_lora.ipynb) serves the exported model and replays notebook 3's NeMo evaluation. It saves paired predictions, both confusion matrices and their difference.
+- [6. Advanced guardrail evaluation](5_eval_guardrail/6_evaluate_guardrail_advanced.ipynb) explores few-shot prompts, category filters and ensembles.
 
 ## Korean Benchmark Datasets
 
@@ -212,6 +215,9 @@ Two content-safety guardrail models were evaluated on Korean hate speech detecti
   - `5_eval_guardrail/2_guardrail_test.ipynb` — Test guardrail configurations interactively
   - `5_eval_guardrail/3_evaluate_guardrail_nemo.ipynb` — Evaluate NeMo Guardrails on K-MHaS Korean hate speech dataset
   - `5_eval_guardrail/3_evaluate_guardrail_kanana.ipynb` — Evaluate Kanana Safeguard on K-MHaS Korean hate speech dataset
+  - `5_eval_guardrail/4_finetune_guardrail_kanana_lora.ipynb` — Train and export a LoRA adapter and merged model with Data Science Pipelines
+  - `5_eval_guardrail/5_compare_guardrail_kanana_lora.ipynb` — Compare base and tuned guardrail decisions on the same validation comments
+  - `5_eval_guardrail/6_evaluate_guardrail_advanced.ipynb` — Explore advanced guardrail techniques
 
 ### Option B: Workshop Participant (shared cluster)
 

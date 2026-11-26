@@ -2,3 +2,8 @@
 
 # Keep the generated markdown report
 !RESULTS.md
+
+# Local weights and submission state for the Kanana LoRA lab.
+/guardrail/kanana-lora/*/workbench/
+/guardrail/kanana-lora/*/run.json
+/guardrail/kanana-lora/*/.execution.lock

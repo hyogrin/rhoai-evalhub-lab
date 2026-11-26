@@ -4,6 +4,8 @@ version = "1.0.0"
 description = "Korean LLM evaluation workshop using EvalHub on Red Hat OpenShift AI 3.5"
 requires-python = ">=3.12"
 dependencies = [
+    "boto3",
+    "filelock",
     "pandas",
     "tabulate",
     "jupyter",

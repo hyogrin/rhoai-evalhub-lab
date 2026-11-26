@@ -6,9 +6,8 @@
 #   <UNSAFE-Sx>  — content violates category Sx (x = 1..7)
 #
 # Categories:
-#   S1: Violent Crimes, S2: Non-Violent Crimes, S3: Sex-Related Crimes,
-#   S4: Child Sexual Exploitation, S5: Suicide & Self-Harm,
-#   S6: Hate, S7: Privacy Violation
+#   S1: Hate, S2: Harassment, S3: Sexual Content, S4: Crime,
+#   S5: Child Sexual Exploitation, S6: Suicide & Self-Harm, S7: Misinformation
 #
 # Reference: https://huggingface.co/kakaocorp/kanana-safeguard-8b
 
